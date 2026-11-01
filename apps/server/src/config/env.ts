@@ -8,7 +8,7 @@ const rootEnvPath = resolve(process.cwd(), "../../.env");
 if (existsSync(rootEnvPath)) {
   config({ path: rootEnvPath, quiet: true });
 } else {
-  // CI and production inject real environment variables instead of a file.
+  // Production injects real environment variables instead of a file.
   config({ quiet: true });
 }
 

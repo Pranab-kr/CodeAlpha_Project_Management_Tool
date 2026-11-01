@@ -4,21 +4,22 @@
 Trello and Asana: projects, a Kanban board, task assignment, comments, in-app notifications,
 and live updates over WebSockets.
 
-> **Build status: Phase 0 complete (foundation).** The monorepo, PostgreSQL schema, seed data,
-> health check, tooling, and CI are in place. Authentication arrives in Phase 1; boards and
-> commentary in later phases. See [docs/superpowers/specs](docs/superpowers/specs/2026-11-01-codealpha-design.md).
+> **Build status: Phases 0–1 complete (foundation and authentication).** The monorepo,
+> PostgreSQL schema, seed data, health check, tooling, and the full cookie-auth stack are in
+> place. Projects, boards, comments, notifications, and realtime arrive in later phases. See
+> [docs/superpowers/specs](docs/superpowers/specs/2026-11-01-codealpha-design.md).
 
 ## Features
 
-| Area            | Status   | Notes                                                      |
-| --------------- | -------- | ---------------------------------------------------------- |
-| Projects        | Planned  | Phase 2 — CRUD, membership, roles                          |
-| Board and tasks | Planned  | Phase 3 — columns, drag-and-drop, task drawer              |
-| Comments        | Planned  | Phase 4 — flat comments, optimistic posting                |
-| Notifications   | Planned  | Phase 5 — assignment and comment notifications             |
-| Realtime        | Planned  | Phase 6 — Socket.IO rooms, presence, cache sync            |
-| Auth            | Planned  | Phase 1 — cookie sessions, refresh rotation, login screens |
-| Foundation      | **Done** | Monorepo, schema, seed, health endpoint, CI                |
+| Area            | Status   | Notes                                                    |
+| --------------- | -------- | -------------------------------------------------------- |
+| Projects        | Planned  | Phase 2 — CRUD, membership, roles                        |
+| Board and tasks | Planned  | Phase 3 — columns, drag-and-drop, task drawer            |
+| Comments        | Planned  | Phase 4 — flat comments, optimistic posting              |
+| Notifications   | Planned  | Phase 5 — assignment and comment notifications           |
+| Realtime        | Planned  | Phase 6 — Socket.IO rooms, presence, cache sync          |
+| Auth            | **Done** | Cookie sessions, refresh rotation, login/register, shell |
+| Foundation      | **Done** | Monorepo, schema, seed, health endpoint, tooling         |
 
 ## Stack
 
@@ -68,7 +69,7 @@ Seeded by `npm run setup` / `npm run db:seed`. All three use the password `Passw
 | `npm run db:migrate`               | Apply migrations                                      |
 | `npm run db:seed`                  | Idempotent demo data                                  |
 | `npm run db:reset`                 | Destructive: drop schema, migrate, seed               |
-| `npm run lint` / `format`          | ESLint / Prettier (add `format:check` in CI)          |
+| `npm run lint` / `format`          | ESLint / Prettier (use `format:check` to verify)      |
 | `npm run typecheck`                | TypeScript across every workspace                     |
 | `npm test`                         | Unit and API integration tests (real PostgreSQL)      |
 | `npm run build`                    | Bundle the server, build the SPA                      |
