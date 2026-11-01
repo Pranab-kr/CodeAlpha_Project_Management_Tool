@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import AppShell from "./components/layout/AppShell";
 import LoginPage from "./pages/LoginPage";
+import ProjectsPlaceholderPage from "./pages/ProjectsPlaceholderPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -12,16 +14,9 @@ export default function App() {
         <Route
           path="/projects"
           element={
-            <main className="flex min-h-screen items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-3xl font-semibold tracking-tight">
-                  CodeAlpha
-                </h1>
-                <p className="mt-2 text-muted-foreground">
-                  Projects arrive in Phase 2.
-                </p>
-              </div>
-            </main>
+            <AppShell>
+              <ProjectsPlaceholderPage />
+            </AppShell>
           }
         />
       </Route>

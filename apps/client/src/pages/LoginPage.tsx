@@ -2,7 +2,7 @@ import { loginSchema, type LoginInput } from "@codealpha/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -13,7 +13,7 @@ const DEMO_EMAIL = "maya@codealpha.dev";
 const DEMO_PASSWORD = "Password123!";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -40,6 +40,10 @@ export default function LoginPage() {
     form.setValue("email", DEMO_EMAIL, { shouldValidate: true });
     form.setValue("password", DEMO_PASSWORD, { shouldValidate: true });
   };
+
+  if (user) {
+    return <Navigate to="/projects" replace />;
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
