@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: codealpha-db
+    environment:
+      POSTGRES_USER: codealpha
+      POSTGRES_PASSWORD: codealpha
+      POSTGRES_DB: codealpha
+    ports:
+      - "5432:5432"
+    volumes:
+      # PostgreSQL 18 images keep PGDATA under /var/lib/postgresql/18/docker;
+      # mounting the parent lets pg_upgrade work and avoids the 18+ guard error.
+      - codealpha_pgdata:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codealpha -d codealpha"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  codealpha_pgdata:
