@@ -1,5 +1,5 @@
 import type { LoginInput, RegisterInput, UserDTO } from "@codealpha/shared";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { env } from "../../config/env.js";
 import { db, type Db } from "../../db/client.js";
 import { sessions, users } from "../../db/schema/index.js";
@@ -120,4 +120,103 @@ export async function loginUser(input: LoginInput): Promise<AuthResult> {
     email: user.email,
   });
   return { user: toUserDTO(user), accessToken, refreshToken };
+}
+
+export interface RotatedSession {
+  user: UserDTO;
+  accessToken: string;
+  refreshToken: string;
+}
+
+const INVALID_SESSION_MESSAGE = "Session is no longer valid";
+
+export async function rotateRefreshToken(
+  rawToken: string,
+): Promise<RotatedSession> {
+  const tokenHash = hashRefreshToken(rawToken);
+  const now = new Date();
+
+  // Session revocation must commit even when the request ends in 401, otherwise
+  // reuse detection would be rolled back with the thrown error.
+  const outcome = await db.transaction(async (tx) => {
+    const [session] = await tx
+      .select()
+      .from(sessions)
+      .where(eq(sessions.tokenHash, tokenHash))
+      .limit(1)
+      .for("update");
+
+    if (!session) return { kind: "invalid" as const };
+
+    if (session.revokedAt) {
+      await tx
+        .update(sessions)
+        .set({ revokedAt: now })
+        .where(eq(sessions.userId, session.userId));
+      return { kind: "invalid" as const };
+    }
+
+    if (session.expiresAt.getTime() <= now.getTime()) {
+      await tx
+        .update(sessions)
+        .set({ revokedAt: now })
+        .where(eq(sessions.id, session.id));
+      return { kind: "invalid" as const };
+    }
+
+    const [user] = await tx
+      .select()
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1);
+    if (!user) {
+      await tx
+        .update(sessions)
+        .set({ revokedAt: now })
+        .where(eq(sessions.id, session.id));
+      return { kind: "invalid" as const };
+    }
+
+    await tx
+      .update(sessions)
+      .set({ revokedAt: now, lastUsedAt: now })
+      .where(eq(sessions.id, session.id));
+    const refreshToken = await issueSession(tx, user.id);
+    const accessToken = await signAccessToken({
+      id: user.id,
+      email: user.email,
+    });
+    return {
+      kind: "ok" as const,
+      user: toUserDTO(user),
+      accessToken,
+      refreshToken,
+    };
+  });
+
+  if (outcome.kind === "ok") {
+    return {
+      user: outcome.user,
+      accessToken: outcome.accessToken,
+      refreshToken: outcome.refreshToken,
+    };
+  }
+  throw AppError.unauthorized(INVALID_SESSION_MESSAGE, "UNAUTHORIZED");
+}
+
+export async function revokeRefreshToken(rawToken: string): Promise<void> {
+  await db
+    .update(sessions)
+    .set({ revokedAt: new Date() })
+    .where(
+      and(
+        eq(sessions.tokenHash, hashRefreshToken(rawToken)),
+        isNull(sessions.revokedAt),
+      ),
+    );
+}
+
+export async function getUserById(id: string): Promise<UserDTO | null> {
+  const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return user ? toUserDTO(user) : null;
 }

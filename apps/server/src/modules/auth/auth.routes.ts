@@ -1,9 +1,13 @@
 import { loginSchema, registerSchema } from "@codealpha/shared";
 import { Router } from "express";
+import { requireAuth } from "../../middleware/auth.js";
 import { validateBody } from "../../middleware/validate.js";
-import { login, register } from "./auth.controller.js";
+import { login, logout, me, refresh, register } from "./auth.controller.js";
 
 export const authRouter = Router();
 
 authRouter.post("/register", validateBody(registerSchema), register);
 authRouter.post("/login", validateBody(loginSchema), login);
+authRouter.post("/refresh", refresh);
+authRouter.post("/logout", logout);
+authRouter.get("/me", requireAuth, me);
