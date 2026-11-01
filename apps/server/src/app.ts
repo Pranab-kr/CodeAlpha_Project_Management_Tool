@@ -6,6 +6,7 @@ import { pool } from "./db/client.js";
 import { AppError } from "./lib/errors.js";
 import { logger } from "./lib/logger.js";
 import { errorHandler } from "./middleware/error.js";
+import { authRouter } from "./modules/auth/auth.routes.js";
 import { createHealthRouter, type HealthCheck } from "./routes/health.js";
 
 export interface CreateAppOptions {
@@ -30,6 +31,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
     "/api/health",
     createHealthRouter(options.healthCheck ?? defaultHealthCheck),
   );
+  app.use("/api/v1/auth", authRouter);
 
   app.use((_req, _res, next) => {
     next(AppError.notFound());
