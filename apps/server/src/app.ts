@@ -11,6 +11,7 @@ import { originGuard } from "./middleware/origin-guard.js";
 import { createRateLimiter } from "./middleware/rate-limit.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { projectsRouter } from "./modules/projects/projects.routes.js";
+import { usersRouter } from "./modules/users/users.routes.js";
 import { createHealthRouter, type HealthCheck } from "./routes/health.js";
 
 export interface CreateAppOptions {
@@ -55,6 +56,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
     createHealthRouter(options.healthCheck ?? defaultHealthCheck),
   );
   app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/users", usersRouter);
   app.use("/api/v1/projects", projectsRouter);
 
   app.use((_req, _res, next) => {
