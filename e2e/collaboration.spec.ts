@@ -51,31 +51,14 @@ test("two users collaborate with notifications and live updates", async ({
   await expect(dev.getByRole("dialog", { name: "Task details" })).toBeVisible();
   await dev.keyboard.press("Escape");
 
-  // Maya moves the task to In Progress; Dev sees it without reload. The move is
-  // issued with Maya's session because dnd-kit pointer geometry is unreliable
-  // in headless Chromium; drag behaviour is covered by component tests.
-  const projectId = new URL(maya.url()).pathname.split("/").pop();
-  const projectResponse = await maya.request.get(
-    `/api/v1/projects/${projectId}`,
-  );
-  const columns = (await projectResponse.json()).data.project.columns as {
-    id: string;
-    name: string;
-  }[];
-  const tasksResponse = await maya.request.get(
-    `/api/v1/projects/${projectId}/tasks`,
-  );
-  const createdTask = (
-    (await tasksResponse.json()).data.tasks as { id: string; title: string }[]
-  ).find((task) => task.title === taskTitle);
-  const inProgress = columns.find((column) => column.name === "In Progress");
-  expect(createdTask).toBeDefined();
-  expect(inProgress).toBeDefined();
-  const moveResponse = await maya.request.patch(
-    `/api/v1/tasks/${createdTask?.id}/move`,
-    { data: { columnId: inProgress?.id } },
-  );
-  expect(moveResponse.ok()).toBe(true);
+  // Maya moves the task with the keyboard sensor (Space to pick up, arrows to
+  // move across columns, Space to drop); Dev sees it without reload.
+  const mayaCard = maya.getByRole("button", { name: new RegExp(taskTitle) });
+  await mayaCard.focus();
+  await maya.keyboard.press("Space");
+  await maya.keyboard.press("ArrowRight");
+  await maya.keyboard.press("ArrowRight");
+  await maya.keyboard.press("Space");
 
   await expect(
     dev.getByRole("region", { name: "In Progress column" }),
