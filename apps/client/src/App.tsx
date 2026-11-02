@@ -1,7 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import AppShell from "./components/layout/AppShell";
+import { AppShellLayout } from "./components/layout/AppShell";
 import LoginPage from "./pages/LoginPage";
-import ProjectsPlaceholderPage from "./pages/ProjectsPlaceholderPage";
+import ProjectHomePage from "./pages/ProjectHomePage";
+import ProjectsPage from "./pages/ProjectsPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -11,14 +12,10 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route element={<ProtectedRoute />}>
-        <Route
-          path="/projects"
-          element={
-            <AppShell>
-              <ProjectsPlaceholderPage />
-            </AppShell>
-          }
-        />
+        <Route element={<AppShellLayout />}>
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:projectId" element={<ProjectHomePage />} />
+        </Route>
       </Route>
       <Route path="/" element={<Navigate to="/projects" replace />} />
       <Route path="*" element={<Navigate to="/projects" replace />} />

@@ -1,5 +1,7 @@
 import { BellIcon } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../../features/auth/useAuth";
+import { useProject } from "../../features/projects/useProjects";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
 import {
@@ -15,6 +17,9 @@ import { SidebarSheet } from "./Sidebar";
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const { projectId } = useParams<{ projectId?: string }>();
+  const { data: project } = useProject(projectId);
+  const title = projectId ? (project?.name ?? "Project") : "Projects";
 
   return (
     <header className="flex h-14 items-center gap-3 border-b bg-card px-4">
@@ -22,8 +27,8 @@ export default function Header() {
         <SidebarSheet />
       </div>
 
-      <span className="text-sm font-medium text-muted-foreground">
-        Projects
+      <span className="truncate text-sm font-medium text-muted-foreground">
+        {title}
       </span>
 
       <div className="ml-auto flex items-center gap-2">

@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AppShell from "./AppShell";
+import { renderWithProviders } from "../../test/render";
 
 const { useAuthMock, logoutMock } = vi.hoisted(() => ({
   useAuthMock: vi.fn(),
@@ -11,6 +11,22 @@ const { useAuthMock, logoutMock } = vi.hoisted(() => ({
 
 vi.mock("../../features/auth/useAuth", () => ({
   useAuth: useAuthMock,
+}));
+
+vi.mock("../../features/projects/useProjects", () => ({
+  useProjects: () => ({
+    data: [],
+    isPending: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+  useProject: () => ({
+    data: undefined,
+    isPending: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+  useCreateProject: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 const maya = {
@@ -34,12 +50,10 @@ describe("AppShell", () => {
   });
 
   it("shows the product mark, the user initials, and the page content", () => {
-    render(
-      <MemoryRouter>
-        <AppShell>
-          <p>Board content</p>
-        </AppShell>
-      </MemoryRouter>,
+    renderWithProviders(
+      <AppShell>
+        <p>Board content</p>
+      </AppShell>,
     );
     expect(screen.getByText("TeamBoard")).toBeInTheDocument();
     expect(screen.getByText("MC")).toBeInTheDocument();
@@ -48,12 +62,10 @@ describe("AppShell", () => {
 
   it("shows the account email and logs out from the user menu", async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <AppShell>
-          <p>Board content</p>
-        </AppShell>
-      </MemoryRouter>,
+    renderWithProviders(
+      <AppShell>
+        <p>Board content</p>
+      </AppShell>,
     );
 
     await user.click(screen.getByRole("button", { name: /open user menu/i }));
