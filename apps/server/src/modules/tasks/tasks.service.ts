@@ -10,7 +10,6 @@ import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
 import { db, type DbExecutor } from "../../db/client.js";
 import {
   boardColumns,
-  comments,
   tasks,
   users,
   type SelectTask,
