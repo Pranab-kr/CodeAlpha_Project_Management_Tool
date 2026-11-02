@@ -25,17 +25,25 @@ const PRIORITY_VARIANTS: Record<
 export default function TaskCard({
   task,
   onOpen,
+  dragHandleProps,
 }: {
   task: TaskCardDTO;
   onOpen?: () => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement> & {
+    ref?: React.Ref<HTMLButtonElement>;
+  };
 }) {
   const overdue = isOverdue(task.dueDate);
 
   return (
     <button
       type="button"
+      {...dragHandleProps}
       onClick={onOpen}
-      className="w-full rounded-lg border bg-card p-3 text-left shadow-xs transition-shadow hover:shadow-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      className={cn(
+        "w-full touch-none rounded-lg border bg-card p-3 text-left shadow-xs transition-shadow hover:shadow-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        dragHandleProps?.className,
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium break-words">{task.title}</p>

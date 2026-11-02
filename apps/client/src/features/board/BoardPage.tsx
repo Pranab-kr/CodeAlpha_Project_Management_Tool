@@ -1,3 +1,18 @@
+import type { TaskCard as TaskCardDTO } from "@teamboard/shared";
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
@@ -5,12 +20,15 @@ import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { ApiError } from "../../lib/api";
 import { initialsColor } from "../../lib/format";
+import { queryKeys } from "../../lib/query-keys";
 import BoardColumn from "../board/BoardColumn";
 import CreateColumnDialog from "../board/CreateColumnDialog";
+import DragOverlayCard from "../board/DragOverlayCard";
 import TaskDrawer from "../board/TaskDrawer";
+import { handleTaskDrop } from "../board/drop-target";
 import { ProjectError, ProjectNotFound } from "../projects/ProjectStates";
 import { useProject } from "../projects/useProjects";
-import { useTasks } from "../tasks/useTasks";
+import { useMoveTask, useTasks } from "../tasks/useTasks";
 
 function BoardLoading() {
   return (
@@ -38,6 +56,15 @@ export default function BoardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const projectQuery = useProject(projectId);
   const tasksQuery = useTasks(projectId);
+  const queryClient = useQueryClient();
+  const moveMutation = useMoveTask(projectId ?? "");
+  const [activeTask, setActiveTask] = useState<TaskCardDTO | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   const openCreate = (columnId: string) => {
     setSearchParams({ task: "new", column: columnId });
@@ -77,6 +104,27 @@ export default function BoardPage() {
   const isCreate = taskParam === "new";
   const createColumnId =
     searchParams.get("column") ?? project.columns[0]?.id ?? null;
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveTask(
+      tasks.find((task) => task.id === String(event.active.id)) ?? null,
+    );
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveTask(null);
+    if (!event.over) return;
+    await handleTaskDrop({
+      activeId: String(event.active.id),
+      overId: String(event.over.id),
+      tasks,
+      applyOptimistic: (next) =>
+        queryClient.setQueryData(queryKeys.tasks(project.id), {
+          tasks: next,
+        }),
+      move: (request) => moveMutation.mutateAsync(request),
+    });
+  };
 
   return (
     <section className="space-y-4">
@@ -142,25 +190,38 @@ export default function BoardPage() {
           ) : null}
         </div>
       ) : (
-        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
-          {project.columns.map((column, index) => (
-            <BoardColumn
-              key={column.id}
-              project={project}
-              column={column}
-              index={index}
-              tasks={tasks.filter((task) => task.columnId === column.id)}
-              canManage={canManage}
-              onAddTask={openCreate}
-              onOpenTask={openTask}
-            />
-          ))}
-          {canManage ? (
-            <div className="w-64 shrink-0">
-              <CreateColumnDialog projectId={project.id} />
-            </div>
-          ) : null}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragEnd={(event) => {
+            void handleDragEnd(event);
+          }}
+          onDragCancel={() => setActiveTask(null)}
+        >
+          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
+            {project.columns.map((column, index) => (
+              <BoardColumn
+                key={column.id}
+                project={project}
+                column={column}
+                index={index}
+                tasks={tasks.filter((task) => task.columnId === column.id)}
+                canManage={canManage}
+                onAddTask={openCreate}
+                onOpenTask={openTask}
+              />
+            ))}
+            {canManage ? (
+              <div className="w-64 shrink-0">
+                <CreateColumnDialog projectId={project.id} />
+              </div>
+            ) : null}
+          </div>
+          <DragOverlay>
+            {activeTask ? <DragOverlayCard task={activeTask} /> : null}
+          </DragOverlay>
+        </DndContext>
       )}
 
       <TaskDrawer
