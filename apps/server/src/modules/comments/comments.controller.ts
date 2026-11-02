@@ -17,7 +17,7 @@ export const listCommentsController: RequestHandler = async (req, res) => {
 export const createCommentController: RequestHandler = async (req, res) => {
   const { taskId } = res.locals.params as { taskId: string };
   const { body } = res.locals.body as CommentBodyInput;
-  const comment = await createComment(taskId, requireActorId(req), body);
+  const { comment } = await createComment(taskId, requireActorId(req), body);
   res.status(201).json({ data: { comment } });
 };
 

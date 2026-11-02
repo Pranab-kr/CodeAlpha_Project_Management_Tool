@@ -8,4 +8,8 @@ export const queryKeys = {
   tasks: (projectId: string) => ["tasks", projectId] as const,
   task: (taskId: string) => ["task", taskId] as const,
   comments: (taskId: string) => ["comments", taskId] as const,
+  notifications: ["notifications"] as const,
+  notificationList: (cursor?: string) =>
+    ["notifications", "list", cursor ?? "first"] as const,
+  notificationUnreadCount: ["notifications", "unread-count"] as const,
 };

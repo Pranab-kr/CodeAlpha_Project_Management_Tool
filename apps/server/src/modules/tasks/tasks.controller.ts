@@ -23,7 +23,7 @@ export const listTasksController: RequestHandler = async (req, res) => {
 export const createTaskController: RequestHandler = async (req, res) => {
   const { projectId } = res.locals.params as { projectId: string };
   const input = res.locals.body as CreateTaskInput;
-  const task = await createTask(projectId, requireActorId(req), input);
+  const { task } = await createTask(projectId, requireActorId(req), input);
   res.status(201).json({ data: { task } });
 };
 
@@ -36,7 +36,7 @@ export const getTaskController: RequestHandler = async (req, res) => {
 export const updateTaskController: RequestHandler = async (req, res) => {
   const { taskId } = res.locals.params as { taskId: string };
   const input = res.locals.body as UpdateTaskInput;
-  const task = await updateTask(taskId, requireActorId(req), input);
+  const { task } = await updateTask(taskId, requireActorId(req), input);
   res.status(200).json({ data: { task } });
 };
 

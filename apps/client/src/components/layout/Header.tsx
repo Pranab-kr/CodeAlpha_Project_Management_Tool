@@ -1,7 +1,7 @@
-import { BellIcon } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../features/auth/useAuth";
+import NotificationBell from "../../features/notifications/NotificationBell";
 import ProfileDialog from "../../features/users/ProfileDialog";
 import { useProject } from "../../features/projects/useProjects";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -35,10 +35,7 @@ export default function Header() {
       </span>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* Notifications land in Phase 5; the slot keeps the header stable. */}
-        <Button variant="ghost" size="icon" aria-label="Notifications" disabled>
-          <BellIcon aria-hidden="true" />
-        </Button>
+        <NotificationBell />
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger

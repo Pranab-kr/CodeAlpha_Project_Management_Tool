@@ -22,6 +22,7 @@ import {
   needsRenumber,
   renumberedPositions,
 } from "../../lib/ordering.js";
+import { notifyTaskAssigned } from "../notifications/notifications.service.js";
 import {
   getMembership,
   requireMembership,
@@ -153,11 +154,17 @@ export async function assertAssigneeIsMember(
   }
 }
 
+export interface TaskWriteResult {
+  task: TaskDetail;
+  /** Notification ids created in the same transaction, for post-commit emits. */
+  notificationIds: string[];
+}
+
 export async function createTask(
   projectId: string,
   actorId: string,
   input: CreateTaskInput,
-): Promise<TaskDetail> {
+): Promise<TaskWriteResult> {
   await requireMembership(projectId, actorId);
 
   return db.transaction(async (tx) => {
@@ -200,7 +207,17 @@ export async function createTask(
       })
       .returning();
 
-    return loadTaskDetail(created.id, tx);
+    const notificationIds = assigneeId
+      ? await notifyTaskAssigned(tx, {
+          projectId,
+          taskId: created.id,
+          actorId,
+          previousAssigneeId: null,
+          nextAssigneeId: assigneeId,
+        })
+      : [];
+
+    return { task: await loadTaskDetail(created.id, tx), notificationIds };
   });
 }
 
@@ -208,31 +225,56 @@ export async function updateTask(
   taskId: string,
   actorId: string,
   input: UpdateTaskInput,
-): Promise<TaskDetail> {
+): Promise<TaskWriteResult> {
   const context = await requireTaskContext(taskId, actorId);
 
-  const patch: {
-    title?: string;
-    description?: string;
-    priority?: TaskPriority;
-    dueDate?: string | null;
-    assigneeId?: string | null;
-    updatedAt: Date;
-  } = { updatedAt: new Date() };
-
-  if (input.title !== undefined) patch.title = input.title;
-  if (input.description !== undefined) patch.description = input.description;
-  if (input.priority !== undefined) patch.priority = input.priority;
-  if (input.dueDate !== undefined) patch.dueDate = input.dueDate;
-  if (input.assigneeId !== undefined) {
-    if (input.assigneeId !== null) {
-      await assertAssigneeIsMember(db, context.projectId, input.assigneeId);
+  return db.transaction(async (tx) => {
+    // Lock the row so the previous assignee cannot change under the update.
+    const [current] = await tx
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, taskId))
+      .limit(1)
+      .for("update");
+    if (!current) {
+      throw AppError.notFound("Task not found", "TASK_NOT_FOUND");
     }
-    patch.assigneeId = input.assigneeId;
-  }
 
-  await db.update(tasks).set(patch).where(eq(tasks.id, taskId));
-  return loadTaskDetail(taskId);
+    const patch: {
+      title?: string;
+      description?: string;
+      priority?: TaskPriority;
+      dueDate?: string | null;
+      assigneeId?: string | null;
+      updatedAt: Date;
+    } = { updatedAt: new Date() };
+
+    if (input.title !== undefined) patch.title = input.title;
+    if (input.description !== undefined) patch.description = input.description;
+    if (input.priority !== undefined) patch.priority = input.priority;
+    if (input.dueDate !== undefined) patch.dueDate = input.dueDate;
+    if (input.assigneeId !== undefined) {
+      if (input.assigneeId !== null) {
+        await assertAssigneeIsMember(tx, context.projectId, input.assigneeId);
+      }
+      patch.assigneeId = input.assigneeId;
+    }
+
+    await tx.update(tasks).set(patch).where(eq(tasks.id, taskId));
+
+    const notificationIds =
+      input.assigneeId !== undefined
+        ? await notifyTaskAssigned(tx, {
+            projectId: context.projectId,
+            taskId,
+            actorId,
+            previousAssigneeId: current.assigneeId,
+            nextAssigneeId: input.assigneeId,
+          })
+        : [];
+
+    return { task: await loadTaskDetail(taskId, tx), notificationIds };
+  });
 }
 
 function invalidNeighbours(): AppError {

@@ -8,6 +8,7 @@ import {
   type SelectComment,
 } from "../../db/schema/index.js";
 import { AppError } from "../../lib/errors.js";
+import { notifyCommentAdded } from "../notifications/notifications.service.js";
 import { getMembership } from "../projects/projects.permissions.js";
 import { requireTaskContext } from "../tasks/tasks.permissions.js";
 import { canDeleteComment } from "./comments.permissions.js";
@@ -81,18 +82,37 @@ export async function listComments(
   return rows.map((row) => toComment(row satisfies CommentRow));
 }
 
+export interface CommentWriteResult {
+  comment: Comment;
+  /** Notification ids created in the same transaction, for post-commit emits. */
+  notificationIds: string[];
+}
+
 export async function createComment(
   taskId: string,
   actorId: string,
   body: string,
-): Promise<Comment> {
-  await requireTaskContext(taskId, actorId);
+): Promise<CommentWriteResult> {
+  const context = await requireTaskContext(taskId, actorId);
 
-  const [created] = await db
-    .insert(comments)
-    .values({ taskId, authorId: actorId, body })
-    .returning();
-  return loadJoinedComment(created.id);
+  return db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(comments)
+      .values({ taskId, authorId: actorId, body })
+      .returning();
+
+    const notificationIds = await notifyCommentAdded(tx, {
+      projectId: context.projectId,
+      taskId,
+      commentId: created.id,
+      actorId,
+    });
+
+    return {
+      comment: await loadJoinedComment(created.id, tx),
+      notificationIds,
+    };
+  });
 }
 
 export async function updateComment(
