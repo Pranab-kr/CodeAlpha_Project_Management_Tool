@@ -24,7 +24,11 @@ import CreateColumnDialog from "../board/CreateColumnDialog";
 import DragOverlayCard from "../board/DragOverlayCard";
 import TaskDrawer from "../board/TaskDrawer";
 import { handleTaskDrop } from "../board/drop-target";
-import { ProjectError, ProjectNotFound } from "../projects/ProjectStates";
+import {
+  ProjectError,
+  ProjectForbidden,
+  ProjectNotFound,
+} from "../projects/ProjectStates";
 import { useProject } from "../projects/useProjects";
 import PresenceStack from "../realtime/PresenceStack";
 import { useProjectRoom } from "../realtime/useProjectRoom";
@@ -90,6 +94,12 @@ export default function BoardPage() {
       projectQuery.error.status === 404
     ) {
       return <ProjectNotFound />;
+    }
+    if (
+      projectQuery.error instanceof ApiError &&
+      projectQuery.error.status === 403
+    ) {
+      return <ProjectForbidden />;
     }
     return <ProjectError onRetry={() => void projectQuery.refetch()} />;
   }

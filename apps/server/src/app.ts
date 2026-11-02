@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import cookieParser from "cookie-parser";
 import express, { type Express } from "express";
 import helmet from "helmet";
@@ -40,6 +41,9 @@ export function createApp(options: CreateAppOptions = {}): Express {
   const enableRateLimit = options.enableRateLimit ?? env.NODE_ENV !== "test";
 
   app.disable("x-powered-by");
+  if (env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+  }
   app.set("enableRateLimit", enableRateLimit);
   app.use(helmet());
   app.use(pinoHttp({ logger }));
@@ -66,6 +70,16 @@ export function createApp(options: CreateAppOptions = {}): Express {
   app.use("/api/v1", tasksRouter);
   app.use("/api/v1", commentsRouter);
   app.use("/api/v1", notificationsRouter);
+
+  // Serve the built SPA from the same origin in production-shaped runs.
+  // API and socket paths fall through to the JSON 404 below.
+  if (env.SERVE_CLIENT || env.NODE_ENV === "production") {
+    const clientDist = resolve(import.meta.dirname, "../../client/dist");
+    app.use(express.static(clientDist, { index: false, maxAge: "1h" }));
+    app.get(/^\/(?!api(?:\/|$)|\socket\.io).*/, (_req, res) => {
+      res.sendFile(resolve(clientDist, "index.html"));
+    });
+  }
 
   app.use((_req, _res, next) => {
     next(AppError.notFound());

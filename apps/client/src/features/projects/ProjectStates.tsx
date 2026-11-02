@@ -1,7 +1,8 @@
 import { ArrowLeftIcon, SettingsIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import ErrorState from "../../components/states/ErrorState";
+import ForbiddenPage from "../../pages/ForbiddenPage";
 import { Badge } from "../../components/ui/badge";
-import { Card, CardContent } from "../../components/ui/card";
 
 export function ProjectNotFound() {
   return (
@@ -23,6 +24,10 @@ export function ProjectNotFound() {
   );
 }
 
+export function ProjectForbidden() {
+  return <ForbiddenPage />;
+}
+
 export function ProjectLoading() {
   return (
     <div
@@ -40,19 +45,11 @@ export function ProjectLoading() {
 
 export function ProjectError({ onRetry }: { onRetry: () => void }) {
   return (
-    <section className="mx-auto max-w-xl rounded-xl border bg-card p-8 text-center">
-      <h1 className="text-lg font-semibold">Could not load this project</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Check your connection and try again.
-      </p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-4 text-sm font-medium text-primary underline-offset-4 hover:underline"
-      >
-        Try again
-      </button>
-    </section>
+    <ErrorState
+      title="Could not load this project"
+      description="Check your connection and try again."
+      onRetry={onRetry}
+    />
   );
 }
 
@@ -84,22 +81,5 @@ export function ProjectHeading({
         Settings
       </Link>
     </div>
-  );
-}
-
-export function PhasePlaceholder({
-  title,
-  body,
-}: {
-  title: string;
-  body: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="flex flex-col items-start gap-2 p-6">
-        <h2 className="font-heading text-base font-medium">{title}</h2>
-        <p className="max-w-xl text-sm text-muted-foreground">{body}</p>
-      </CardContent>
-    </Card>
   );
 }

@@ -28,6 +28,10 @@ const envSchema = z
       .enum(["true", "false"])
       .default("false")
       .transform((value) => value === "true"),
+    SERVE_CLIENT: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
     LOG_LEVEL: z.string().default("info"),
   })
   .superRefine((value, ctx) => {

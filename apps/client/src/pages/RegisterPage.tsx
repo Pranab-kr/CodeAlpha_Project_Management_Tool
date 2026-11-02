@@ -2,7 +2,7 @@ import { registerSchema, type RegisterInput } from "@teamboard/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -12,6 +12,9 @@ import { ApiError } from "../lib/api";
 export default function RegisterPage() {
   const { register: registerUser, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from =
+    (location.state as { from?: string } | null)?.from ?? "/projects";
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<RegisterInput>({
@@ -23,7 +26,7 @@ export default function RegisterPage() {
     setServerError(null);
     try {
       await registerUser(values);
-      navigate("/projects");
+      navigate(from, { replace: true });
     } catch (error) {
       setServerError(
         error instanceof ApiError
@@ -34,7 +37,7 @@ export default function RegisterPage() {
   });
 
   if (user) {
-    return <Navigate to="/projects" replace />;
+    return <Navigate to={from} replace />;
   }
 
   return (

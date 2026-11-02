@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Loader2Icon } from "lucide-react";
 import { useAuth } from "../features/auth/useAuth";
 
 export default function ProtectedRoute() {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -22,7 +23,13 @@ export default function ProtectedRoute() {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+      />
+    );
   }
 
   return <Outlet />;

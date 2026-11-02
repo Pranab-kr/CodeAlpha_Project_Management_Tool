@@ -2,7 +2,7 @@ import { loginSchema, type LoginInput } from "@teamboard/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -15,6 +15,9 @@ const DEMO_PASSWORD = "Password123!";
 export default function LoginPage() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from =
+    (location.state as { from?: string } | null)?.from ?? "/projects";
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<LoginInput>({
@@ -26,7 +29,7 @@ export default function LoginPage() {
     setServerError(null);
     try {
       await login(values);
-      navigate("/projects");
+      navigate(from, { replace: true });
     } catch (error) {
       setServerError(
         error instanceof ApiError
@@ -42,7 +45,7 @@ export default function LoginPage() {
   };
 
   if (user) {
-    return <Navigate to="/projects" replace />;
+    return <Navigate to={from} replace />;
   }
 
   return (

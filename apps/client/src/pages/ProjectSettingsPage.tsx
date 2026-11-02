@@ -10,6 +10,7 @@ import GeneralSettings from "../features/projects/GeneralSettings";
 import MembersPanel from "../features/projects/MembersPanel";
 import {
   ProjectError,
+  ProjectForbidden,
   ProjectHeading,
   ProjectLoading,
   ProjectNotFound,
@@ -32,6 +33,9 @@ export default function ProjectSettingsPage() {
     if (error instanceof ApiError && error.status === 404) {
       return <ProjectNotFound />;
     }
+    if (error instanceof ApiError && error.status === 403) {
+      return <ProjectForbidden />;
+    }
     return <ProjectError onRetry={() => void refetch()} />;
   }
 
@@ -44,7 +48,7 @@ export default function ProjectSettingsPage() {
       />
 
       <Tabs defaultValue="general">
-        <TabsList>
+        <TabsList className="max-w-full overflow-x-auto">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="danger">Danger zone</TabsTrigger>

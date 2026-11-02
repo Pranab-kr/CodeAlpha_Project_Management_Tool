@@ -8,20 +8,24 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Route, Routes } from "react-router-dom";
 import BoardPage from "./BoardPage";
+import { ApiError } from "../../lib/api";
 import { renderWithProviders } from "../../test/render";
 
-const { useAuthMock, projectState, tasksState, taskState } = vi.hoisted(() => ({
-  useAuthMock: vi.fn(),
-  projectState: { current: null as ProjectDetail | null },
-  tasksState: { current: [] as TaskCardDTO[] },
-  taskState: { current: null as TaskDetail | null },
-}));
+const { useAuthMock, projectState, projectErrorState, tasksState, taskState } =
+  vi.hoisted(() => ({
+    useAuthMock: vi.fn(),
+    projectState: { current: null as ProjectDetail | null },
+    projectErrorState: { current: null as unknown },
+    tasksState: { current: [] as TaskCardDTO[] },
+    taskState: { current: null as TaskDetail | null },
+  }));
 
 vi.mock("../projects/useProjects", () => ({
   useProject: () => ({
-    data: projectState.current,
+    data: projectErrorState.current ? undefined : projectState.current,
     isPending: false,
-    isError: false,
+    isError: Boolean(projectErrorState.current),
+    error: projectErrorState.current,
     refetch: vi.fn(),
   }),
 }));
@@ -150,6 +154,7 @@ describe("BoardPage", () => {
     useAuthMock.mockReset();
     useAuthMock.mockReturnValue({ user: maya, isLoading: false });
     projectState.current = project;
+    projectErrorState.current = null;
     tasksState.current = [card];
     taskState.current = detail;
   });
@@ -186,5 +191,31 @@ describe("BoardPage", () => {
     await user.click(screen.getAllByRole("button", { name: "Add task" })[1]);
     expect(await screen.findByText("New task")).toBeInTheDocument();
     expect(screen.getByText("Adding to Backlog.")).toBeInTheDocument();
+  });
+
+  it("shows the not-found panel for a missing project", () => {
+    projectErrorState.current = new ApiError(
+      404,
+      "PROJECT_NOT_FOUND",
+      "Project not found",
+    );
+    renderBoard("/projects/p1");
+
+    expect(
+      screen.getByRole("heading", { name: "Project not found" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the forbidden panel for a 403", () => {
+    projectErrorState.current = new ApiError(
+      403,
+      "FORBIDDEN",
+      "You don't have access",
+    );
+    renderBoard("/projects/p1");
+
+    expect(
+      screen.getByRole("heading", { name: "You don't have access" }),
+    ).toBeInTheDocument();
   });
 });
