@@ -27,6 +27,7 @@ vi.mock("../../features/projects/useProjects", () => ({
     refetch: vi.fn(),
   }),
   useCreateProject: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpdateProfile: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 const maya = {
@@ -73,5 +74,20 @@ describe("AppShell", () => {
 
     await user.click(screen.getByRole("menuitem", { name: /log out/i }));
     expect(logoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens the profile dialog from the user menu", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <AppShell>
+        <p>Board content</p>
+      </AppShell>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /open user menu/i }));
+    await user.click(await screen.findByRole("menuitem", { name: "Profile" }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByLabelText("Display name")).toHaveValue("Maya Chen");
   });
 });

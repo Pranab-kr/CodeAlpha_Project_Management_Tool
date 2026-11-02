@@ -1,6 +1,8 @@
 import { BellIcon } from "lucide-react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../features/auth/useAuth";
+import ProfileDialog from "../../features/users/ProfileDialog";
 import { useProject } from "../../features/projects/useProjects";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -19,6 +21,7 @@ export default function Header() {
   const { user, logout } = useAuth();
   const { projectId } = useParams<{ projectId?: string }>();
   const { data: project } = useProject(projectId);
+  const [profileOpen, setProfileOpen] = useState(false);
   const title = projectId ? (project?.name ?? "Project") : "Projects";
 
   return (
@@ -63,6 +66,9 @@ export default function Header() {
                 </DropdownMenuLabel>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setProfileOpen(true)}>
+                Profile
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => void logout()}>
                 Log out
               </DropdownMenuItem>
@@ -70,6 +76,14 @@ export default function Header() {
           </DropdownMenu>
         ) : null}
       </div>
+
+      {user && profileOpen ? (
+        <ProfileDialog
+          user={user}
+          open={profileOpen}
+          onOpenChange={setProfileOpen}
+        />
+      ) : null}
     </header>
   );
 }
