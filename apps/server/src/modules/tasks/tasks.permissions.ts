@@ -11,6 +11,15 @@ export interface TaskContext {
   role: ProjectRole;
 }
 
+/** Creator, admin, or owner. Plain members cannot delete another's task. */
+export function canDeleteTask(
+  role: ProjectRole,
+  createdBy: string,
+  actorId: string,
+): boolean {
+  return role === "owner" || role === "admin" || createdBy === actorId;
+}
+
 /**
  * A missing task and a non-member both answer TASK_NOT_FOUND so task routes do
  * not leak project or task existence.

@@ -1,5 +1,12 @@
-import type { CreateTaskInput, TaskCard, TaskDetail } from "@teamboard/shared";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import type {
+  CreateTaskInput,
+  MoveTaskInput,
+  TaskCard,
+  TaskDetail,
+  TaskPriority,
+  UpdateTaskInput,
+} from "@teamboard/shared";
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
 import { db, type DbExecutor } from "../../db/client.js";
 import {
   boardColumns,
@@ -10,13 +17,18 @@ import {
   type SelectUser,
 } from "../../db/schema/index.js";
 import { AppError } from "../../lib/errors.js";
-import { appendPosition } from "../../lib/ordering.js";
+import {
+  appendPosition,
+  computePosition,
+  needsRenumber,
+  renumberedPositions,
+} from "../../lib/ordering.js";
 import {
   getMembership,
   requireMembership,
 } from "../projects/projects.permissions.js";
 import { toTaskCard, toTaskDetail, type TaskRow } from "./tasks.mapper.js";
-import { requireTaskContext } from "./tasks.permissions.js";
+import { canDeleteTask, requireTaskContext } from "./tasks.permissions.js";
 
 // Qualified names again: an unqualified `"id"` in a correlated subquery binds
 // to the inner table and silently counts zero rows.
@@ -54,6 +66,27 @@ function buildRow(
   return { task, commentCount, assignee, creator };
 }
 
+/** Loads the full detail (with a live comment count) using any executor. */
+async function loadTaskDetail(
+  taskId: string,
+  executor: DbExecutor = db,
+): Promise<TaskDetail> {
+  const [row] = await executor
+    .select({ task: tasks, commentCount: commentCountSql })
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
+  if (!row) {
+    throw AppError.notFound("Task not found", "TASK_NOT_FOUND");
+  }
+
+  const usersById = await loadUsers(
+    [row.task.createdBy, ...(row.task.assigneeId ? [row.task.assigneeId] : [])],
+    executor,
+  );
+  return toTaskDetail(buildRow(row.task, row.commentCount, usersById));
+}
+
 export async function listTasks(
   projectId: string,
   actorId: string,
@@ -82,18 +115,8 @@ export async function getTaskDetail(
   taskId: string,
   actorId: string,
 ): Promise<TaskDetail> {
-  const context = await requireTaskContext(taskId, actorId);
-
-  const [countRow] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(comments)
-    .where(eq(comments.taskId, taskId));
-
-  const usersById = await loadUsers([
-    context.task.createdBy,
-    ...(context.task.assigneeId ? [context.task.assigneeId] : []),
-  ]);
-  return toTaskDetail(buildRow(context.task, countRow.count, usersById));
+  await requireTaskContext(taskId, actorId);
+  return loadTaskDetail(taskId);
 }
 
 export async function assertColumnBelongsToProject(
@@ -178,10 +201,211 @@ export async function createTask(
       })
       .returning();
 
-    const usersById = await loadUsers(
-      [created.createdBy, ...(created.assigneeId ? [created.assigneeId] : [])],
-      tx,
-    );
-    return toTaskDetail(buildRow(created, 0, usersById));
+    return loadTaskDetail(created.id, tx);
   });
+}
+
+export async function updateTask(
+  taskId: string,
+  actorId: string,
+  input: UpdateTaskInput,
+): Promise<TaskDetail> {
+  const context = await requireTaskContext(taskId, actorId);
+
+  const patch: {
+    title?: string;
+    description?: string;
+    priority?: TaskPriority;
+    dueDate?: string | null;
+    assigneeId?: string | null;
+    updatedAt: Date;
+  } = { updatedAt: new Date() };
+
+  if (input.title !== undefined) patch.title = input.title;
+  if (input.description !== undefined) patch.description = input.description;
+  if (input.priority !== undefined) patch.priority = input.priority;
+  if (input.dueDate !== undefined) patch.dueDate = input.dueDate;
+  if (input.assigneeId !== undefined) {
+    if (input.assigneeId !== null) {
+      await assertAssigneeIsMember(db, context.projectId, input.assigneeId);
+    }
+    patch.assigneeId = input.assigneeId;
+  }
+
+  await db.update(tasks).set(patch).where(eq(tasks.id, taskId));
+  return loadTaskDetail(taskId);
+}
+
+function invalidNeighbours(): AppError {
+  return AppError.unprocessable(
+    "INVALID_NEIGHBOURS",
+    "Neighbours must be distinct tasks in the target column, in order",
+  );
+}
+
+async function lockColumn(
+  executor: DbExecutor,
+  columnId: string,
+): Promise<void> {
+  await executor
+    .select({ id: boardColumns.id })
+    .from(boardColumns)
+    .where(eq(boardColumns.id, columnId))
+    .limit(1)
+    .for("update");
+}
+
+async function loadTask(
+  executor: DbExecutor,
+  taskId: string,
+): Promise<SelectTask | null> {
+  const [task] = await executor
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
+  return task ?? null;
+}
+
+/** Renumber a column to 1024, 2048, … while excluding the task being moved. */
+async function renumberColumn(
+  executor: DbExecutor,
+  columnId: string,
+  excludeTaskId: string,
+): Promise<void> {
+  const rows = await executor
+    .select({ id: tasks.id })
+    .from(tasks)
+    .where(and(eq(tasks.columnId, columnId), ne(tasks.id, excludeTaskId)))
+    .orderBy(asc(tasks.position), asc(tasks.id));
+
+  const positions = renumberedPositions(rows.length);
+  for (const [index, row] of rows.entries()) {
+    await executor
+      .update(tasks)
+      .set({ position: positions[index] })
+      .where(eq(tasks.id, row.id));
+  }
+}
+
+export async function moveTask(
+  taskId: string,
+  actorId: string,
+  input: MoveTaskInput,
+): Promise<{ task: TaskDetail; fromColumnId: string }> {
+  const context = await requireTaskContext(taskId, actorId);
+  const fromColumnId = context.task.columnId;
+
+  return db.transaction(async (tx) => {
+    // Lock the task so two moves of the same card serialize.
+    const task = await loadTask(tx, taskId);
+    if (!task) {
+      throw AppError.notFound("Task not found", "TASK_NOT_FOUND");
+    }
+
+    const target = await assertColumnBelongsToProject(
+      tx,
+      task.projectId,
+      input.columnId,
+    );
+
+    // Lock both columns in sorted id order (deduplicated) to avoid deadlocks
+    // with concurrent appends and moves.
+    const columnIds = [...new Set([task.columnId, target.id])].sort();
+    for (const columnId of columnIds) {
+      await lockColumn(tx, columnId);
+    }
+
+    const beforeId = input.beforeTaskId ?? null;
+    const afterId = input.afterTaskId ?? null;
+    if (beforeId && afterId && beforeId === afterId) {
+      throw invalidNeighbours();
+    }
+
+    let beforeTask: SelectTask | null = null;
+    let afterTask: SelectTask | null = null;
+
+    if (beforeId) {
+      const candidate = await loadTask(tx, beforeId);
+      if (
+        !candidate ||
+        candidate.id === taskId ||
+        candidate.columnId !== target.id
+      ) {
+        throw invalidNeighbours();
+      }
+      beforeTask = candidate;
+    }
+
+    if (afterId) {
+      const candidate = await loadTask(tx, afterId);
+      if (
+        !candidate ||
+        candidate.id === taskId ||
+        candidate.columnId !== target.id
+      ) {
+        throw invalidNeighbours();
+      }
+      afterTask = candidate;
+    }
+
+    if (beforeTask && afterTask && beforeTask.position >= afterTask.position) {
+      throw invalidNeighbours();
+    }
+
+    let position: number;
+    if (!beforeTask && !afterTask) {
+      // Both neighbours omitted means append to the end of the target column.
+      const [maxRow] = await tx
+        .select({ maxPosition: sql<number | null>`max(${tasks.position})` })
+        .from(tasks)
+        .where(and(eq(tasks.columnId, target.id), ne(tasks.id, taskId)));
+      position = appendPosition(maxRow?.maxPosition ?? null);
+    } else {
+      if (
+        needsRenumber(beforeTask?.position ?? null, afterTask?.position ?? null)
+      ) {
+        await renumberColumn(tx, target.id, taskId);
+        if (beforeId) {
+          beforeTask = await loadTask(tx, beforeId);
+          if (!beforeTask) throw invalidNeighbours();
+        }
+        if (afterId) {
+          afterTask = await loadTask(tx, afterId);
+          if (!afterTask) throw invalidNeighbours();
+        }
+      }
+      position = computePosition(
+        beforeTask?.position ?? null,
+        afterTask?.position ?? null,
+      );
+    }
+
+    await tx
+      .update(tasks)
+      .set({ columnId: target.id, position, updatedAt: new Date() })
+      .where(eq(tasks.id, taskId));
+
+    return { task: await loadTaskDetail(taskId, tx), fromColumnId };
+  });
+}
+
+export async function deleteTask(
+  taskId: string,
+  actorId: string,
+): Promise<{ taskId: string; columnId: string; projectId: string }> {
+  const context = await requireTaskContext(taskId, actorId);
+  if (!canDeleteTask(context.role, context.task.createdBy, actorId)) {
+    throw AppError.forbidden(
+      "Only the task creator, an admin, or the owner can delete this task",
+      "FORBIDDEN",
+    );
+  }
+
+  await db.delete(tasks).where(eq(tasks.id, taskId));
+  return {
+    taskId,
+    columnId: context.task.columnId,
+    projectId: context.projectId,
+  };
 }
