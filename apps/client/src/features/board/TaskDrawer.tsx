@@ -37,6 +37,7 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { Textarea } from "../../components/ui/textarea";
 import { ApiError } from "../../lib/api";
 import { useAuth } from "../auth/useAuth";
+import CommentsSection from "../comments/CommentsSection";
 import {
   useCreateTask,
   useDeleteTask,
@@ -358,14 +359,23 @@ export default function TaskDrawer({
                 </AlertDialog>
               ) : null}
             </div>
-
-            <div className="rounded-lg border border-dashed p-4">
-              <h3 className="text-sm font-medium">Comments</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Comments arrive in Phase 4.
-              </p>
-            </div>
           </form>
+        ) : null}
+
+        {isCreate ? (
+          <p className="px-4 pb-6 text-sm text-muted-foreground">
+            Save the task before commenting.
+          </p>
+        ) : null}
+
+        {!isCreate && task ? (
+          <div className="border-t px-4 py-4">
+            <CommentsSection
+              taskId={task.id}
+              projectId={task.projectId}
+              canModerate={project.role !== "member"}
+            />
+          </div>
         ) : null}
       </SheetContent>
     </Sheet>

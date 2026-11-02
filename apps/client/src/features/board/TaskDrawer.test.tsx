@@ -30,6 +30,10 @@ vi.mock("../tasks/useTasks", () => ({
   useDeleteTask: () => ({ mutateAsync: deleteMock, isPending: false }),
 }));
 
+vi.mock("../comments/CommentsSection", () => ({
+  default: () => null,
+}));
+
 const maya = {
   id: "11111111-1111-4111-8111-111111111111",
   email: "maya@teamboard.dev",
