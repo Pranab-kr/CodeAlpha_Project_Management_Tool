@@ -1,6 +1,7 @@
 import type { NotificationListQuery } from "@teamboard/shared";
 import type { RequestHandler } from "express";
 import { requireActorId } from "../../middleware/auth.js";
+import { emitToUser } from "../../realtime/emitter.js";
 import {
   listNotifications,
   markAllNotificationsRead,
@@ -24,7 +25,14 @@ export const markNotificationReadController: RequestHandler = async (
   res,
 ) => {
   const { id } = res.locals.params as { id: string };
-  const notification = await markNotificationRead(requireActorId(req), id);
+  const userId = requireActorId(req);
+  const notification = await markNotificationRead(userId, id);
+  if (notification.readAt) {
+    emitToUser(userId, "notification:read", {
+      notificationId: notification.id,
+      readAt: notification.readAt,
+    });
+  }
   res.status(200).json({ data: { notification } });
 };
 
@@ -32,6 +40,10 @@ export const markAllNotificationsReadController: RequestHandler = async (
   req,
   res,
 ) => {
-  const { updated } = await markAllNotificationsRead(requireActorId(req));
+  const userId = requireActorId(req);
+  const { updated, readAt } = await markAllNotificationsRead(userId);
+  emitToUser(userId, "notifications:read-all", {
+    readAt: readAt.toISOString(),
+  });
   res.status(200).json({ data: { updated } });
 };

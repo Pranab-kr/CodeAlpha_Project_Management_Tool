@@ -9,11 +9,12 @@ import {
   markNotificationRead,
 } from "./notifications.api";
 
-export function useUnreadNotificationCount() {
+export function useUnreadNotificationCount(isConnected = false) {
   return useQuery({
     queryKey: queryKeys.notificationUnreadCount,
     queryFn: getUnreadCount,
-    refetchInterval: 30_000,
+    // The socket delivers changes live; polling is the disconnected fallback.
+    refetchInterval: isConnected ? false : 30_000,
     refetchOnWindowFocus: true,
     staleTime: 15_000,
   });

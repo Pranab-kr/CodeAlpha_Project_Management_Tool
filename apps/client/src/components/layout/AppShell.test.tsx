@@ -30,6 +30,20 @@ vi.mock("../../features/projects/useProjects", () => ({
   useUpdateProfile: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
+vi.mock("../../features/realtime/useSocket", () => ({
+  useSocket: () => ({ socket: { connected: false }, isConnected: false }),
+}));
+vi.mock("../../features/notifications/notifications.api", () => ({
+  listNotifications: vi.fn().mockResolvedValue({
+    items: [],
+    unreadCount: 0,
+    nextCursor: null,
+  }),
+  getUnreadCount: vi.fn().mockResolvedValue({ count: 0 }),
+  markNotificationRead: vi.fn(),
+  markAllNotificationsRead: vi.fn(),
+}));
+
 const maya = {
   id: "u1",
   email: "maya@teamboard.dev",

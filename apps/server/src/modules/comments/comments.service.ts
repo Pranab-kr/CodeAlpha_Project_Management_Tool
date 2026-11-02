@@ -8,6 +8,7 @@ import {
   type SelectComment,
 } from "../../db/schema/index.js";
 import { AppError } from "../../lib/errors.js";
+import { emitNotificationIds, emitToProject } from "../../realtime/emitter.js";
 import { notifyCommentAdded } from "../notifications/notifications.service.js";
 import { getMembership } from "../projects/projects.permissions.js";
 import { requireTaskContext } from "../tasks/tasks.permissions.js";
@@ -95,7 +96,7 @@ export async function createComment(
 ): Promise<CommentWriteResult> {
   const context = await requireTaskContext(taskId, actorId);
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [created] = await tx
       .insert(comments)
       .values({ taskId, authorId: actorId, body })
@@ -113,6 +114,13 @@ export async function createComment(
       notificationIds,
     };
   });
+
+  emitToProject(context.projectId, "comment:created", {
+    taskId: result.comment.taskId,
+    comment: result.comment,
+  });
+  await emitNotificationIds(result.notificationIds);
+  return result;
 }
 
 export async function updateComment(
@@ -132,7 +140,12 @@ export async function updateComment(
     .update(comments)
     .set({ body, updatedAt: new Date() })
     .where(eq(comments.id, commentId));
-  return loadJoinedComment(commentId);
+  const comment = await loadJoinedComment(commentId);
+  emitToProject(context.projectId, "comment:updated", {
+    taskId: comment.taskId,
+    comment,
+  });
+  return comment;
 }
 
 export async function deleteComment(
@@ -148,9 +161,14 @@ export async function deleteComment(
   }
 
   await db.delete(comments).where(eq(comments.id, commentId));
-  return {
+  const result = {
     taskId: context.comment.taskId,
     commentId,
     projectId: context.projectId,
   };
+  emitToProject(result.projectId, "comment:deleted", {
+    taskId: result.taskId,
+    commentId: result.commentId,
+  });
+  return result;
 }

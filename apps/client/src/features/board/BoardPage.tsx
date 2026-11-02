@@ -14,12 +14,10 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { ApiError } from "../../lib/api";
-import { initialsColor } from "../../lib/format";
 import { queryKeys } from "../../lib/query-keys";
 import BoardColumn from "../board/BoardColumn";
 import CreateColumnDialog from "../board/CreateColumnDialog";
@@ -28,6 +26,8 @@ import TaskDrawer from "../board/TaskDrawer";
 import { handleTaskDrop } from "../board/drop-target";
 import { ProjectError, ProjectNotFound } from "../projects/ProjectStates";
 import { useProject } from "../projects/useProjects";
+import PresenceStack from "../realtime/PresenceStack";
+import { useProjectRoom } from "../realtime/useProjectRoom";
 import { useMoveTask, useTasks } from "../tasks/useTasks";
 
 function BoardLoading() {
@@ -56,6 +56,7 @@ export default function BoardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const projectQuery = useProject(projectId);
   const tasksQuery = useTasks(projectId);
+  const { onlineUserIds } = useProjectRoom(projectId);
   const queryClient = useQueryClient();
   const moveMutation = useMoveTask(projectId ?? "");
   const [activeTask, setActiveTask] = useState<TaskCardDTO | null>(null);
@@ -142,20 +143,10 @@ export default function BoardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="hidden -space-x-2 sm:flex">
-            {project.members.slice(0, 4).map((member) => (
-              <Avatar
-                key={member.userId}
-                size="sm"
-                className="ring-2 ring-background"
-                aria-label={member.name}
-              >
-                <AvatarFallback className={initialsColor(member.userId)}>
-                  {member.initials}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-          </div>
+          <PresenceStack
+            members={project.members}
+            onlineUserIds={onlineUserIds}
+          />
           <Button
             variant="outline"
             nativeButton={false}

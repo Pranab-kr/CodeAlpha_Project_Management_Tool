@@ -15,6 +15,7 @@ import {
 } from "../../db/schema/index.js";
 import { AppError } from "../../lib/errors.js";
 import { appendPosition } from "../../lib/ordering.js";
+import { emitToProject } from "../../realtime/emitter.js";
 import { toBoardColumn } from "../projects/projects.mapper.js";
 import {
   getMembership,
@@ -80,7 +81,7 @@ export async function createColumn(
 ): Promise<BoardColumn> {
   await requireRole(projectId, actorId, ["owner", "admin"]);
 
-  return db.transaction(async (tx) => {
+  const column = await db.transaction(async (tx) => {
     await lockProject(tx, projectId);
     const [row] = await tx
       .select({
@@ -99,6 +100,9 @@ export async function createColumn(
       .returning();
     return toBoardColumn(created);
   });
+
+  emitToProject(projectId, "column:created", { column });
+  return column;
 }
 
 export async function updateColumn(
@@ -114,7 +118,9 @@ export async function updateColumn(
     .set({ name: input.name })
     .where(eq(boardColumns.id, columnId))
     .returning();
-  return toBoardColumn(updated);
+  const column = toBoardColumn(updated);
+  emitToProject(context.projectId, "column:updated", { column });
+  return column;
 }
 
 export async function reorderColumns(
@@ -124,7 +130,7 @@ export async function reorderColumns(
 ): Promise<BoardColumn[]> {
   await requireRole(projectId, actorId, ["owner", "admin"]);
 
-  return db.transaction(async (tx) => {
+  const reordered = await db.transaction(async (tx) => {
     await lockProject(tx, projectId);
     const columns = await tx
       .select()
@@ -147,7 +153,7 @@ export async function reorderColumns(
       );
     }
 
-    const reordered: BoardColumn[] = [];
+    const next: BoardColumn[] = [];
     for (const [index, id] of requested.entries()) {
       const position = (index + 1) * 1024;
       const column = byId.get(id);
@@ -161,10 +167,13 @@ export async function reorderColumns(
         .update(boardColumns)
         .set({ position })
         .where(eq(boardColumns.id, id));
-      reordered.push(toBoardColumn({ ...column, position }));
+      next.push(toBoardColumn({ ...column, position }));
     }
-    return reordered;
+    return next;
   });
+
+  emitToProject(projectId, "columns:reordered", { columns: reordered });
+  return reordered;
 }
 
 export async function deleteColumn(
@@ -174,7 +183,7 @@ export async function deleteColumn(
   const context = await getColumnContext(columnId, actorId);
   if (!isManager(context.role)) throw forbidden();
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     // Lock before counting so a concurrent task create cannot slip in between.
     const [column] = await tx
       .select()
@@ -200,4 +209,9 @@ export async function deleteColumn(
     await tx.delete(boardColumns).where(eq(boardColumns.id, columnId));
     return { columnId, projectId: context.projectId };
   });
+
+  emitToProject(result.projectId, "column:deleted", {
+    columnId: result.columnId,
+  });
+  return result;
 }

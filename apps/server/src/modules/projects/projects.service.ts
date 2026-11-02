@@ -22,6 +22,12 @@ import {
 } from "../../db/schema/index.js";
 import { AppError } from "../../lib/errors.js";
 import {
+  emitMemberRemoved,
+  emitProjectDeleted,
+  emitToProject,
+} from "../../realtime/emitter.js";
+import { getIo } from "../../realtime/io.js";
+import {
   toProjectDetail,
   toProjectListItem,
   toProjectMember,
@@ -226,7 +232,12 @@ export async function updateProject(
   if (input.description !== undefined) patch.description = input.description;
 
   await db.update(projects).set(patch).where(eq(projects.id, projectId));
-  return getProjectDetail(projectId, actorId);
+  const detail = await getProjectDetail(projectId, actorId);
+  if (getIo()) {
+    const project = await getProjectSummary(projectId);
+    emitToProject(projectId, "project:updated", { project });
+  }
+  return detail;
 }
 
 export async function deleteProject(
@@ -234,7 +245,15 @@ export async function deleteProject(
   actorId: string,
 ): Promise<void> {
   await requireRole(projectId, actorId, ["owner"]);
+  const members = await db
+    .select({ userId: projectMembers.userId })
+    .from(projectMembers)
+    .where(eq(projectMembers.projectId, projectId));
   await db.delete(projects).where(eq(projects.id, projectId));
+  await emitProjectDeleted(
+    projectId,
+    members.map((member) => member.userId),
+  );
 }
 
 async function loadMemberRows(projectId: string) {
@@ -294,11 +313,13 @@ export async function addMember(
       .insert(projectMembers)
       .values({ projectId, userId: user.id, role: "member" })
       .returning();
-    return toProjectMember({
+    const member = toProjectMember({
       user,
       role: membership.role,
       joinedAt: membership.joinedAt,
     });
+    emitToProject(projectId, "member:added", { member });
+    return member;
   } catch (error) {
     // The pre-check loses to a concurrent add; the composite key wins.
     if (isDuplicateMembership(error)) {
@@ -346,11 +367,13 @@ export async function updateMemberRole(
   if (!user) {
     throw AppError.notFound("Member not found", "MEMBER_NOT_FOUND");
   }
-  return toProjectMember({
+  const member = toProjectMember({
     user,
     role: updated.role,
     joinedAt: updated.joinedAt,
   });
+  emitToProject(projectId, "member:updated", { member });
+  return member;
 }
 
 export async function removeMember(
@@ -410,4 +433,6 @@ export async function removeMember(
         ),
       );
   });
+
+  await emitMemberRemoved(projectId, targetUserId);
 }

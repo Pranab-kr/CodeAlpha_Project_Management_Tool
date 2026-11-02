@@ -22,12 +22,18 @@ import {
   needsRenumber,
   renumberedPositions,
 } from "../../lib/ordering.js";
+import { emitNotificationIds, emitToProject } from "../../realtime/emitter.js";
 import { notifyTaskAssigned } from "../notifications/notifications.service.js";
 import {
   getMembership,
   requireMembership,
 } from "../projects/projects.permissions.js";
-import { toTaskCard, toTaskDetail, type TaskRow } from "./tasks.mapper.js";
+import {
+  toTaskCard,
+  toTaskCardFromDetail,
+  toTaskDetail,
+  type TaskRow,
+} from "./tasks.mapper.js";
 import { canDeleteTask, requireTaskContext } from "./tasks.permissions.js";
 
 // Qualified names again: an unqualified `"id"` in a correlated subquery binds
@@ -167,7 +173,7 @@ export async function createTask(
 ): Promise<TaskWriteResult> {
   await requireMembership(projectId, actorId);
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const column = await assertColumnBelongsToProject(
       tx,
       projectId,
@@ -219,6 +225,12 @@ export async function createTask(
 
     return { task: await loadTaskDetail(created.id, tx), notificationIds };
   });
+
+  emitToProject(projectId, "task:created", {
+    task: toTaskCardFromDetail(result.task),
+  });
+  await emitNotificationIds(result.notificationIds);
+  return result;
 }
 
 export async function updateTask(
@@ -228,7 +240,7 @@ export async function updateTask(
 ): Promise<TaskWriteResult> {
   const context = await requireTaskContext(taskId, actorId);
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     // Lock the row so the previous assignee cannot change under the update.
     const [current] = await tx
       .select()
@@ -275,6 +287,12 @@ export async function updateTask(
 
     return { task: await loadTaskDetail(taskId, tx), notificationIds };
   });
+
+  emitToProject(context.projectId, "task:updated", {
+    task: toTaskCardFromDetail(result.task),
+  });
+  await emitNotificationIds(result.notificationIds);
+  return result;
 }
 
 function invalidNeighbours(): AppError {
@@ -337,7 +355,7 @@ export async function moveTask(
   const context = await requireTaskContext(taskId, actorId);
   const fromColumnId = context.task.columnId;
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     // Lock the task so two moves of the same card serialize.
     const task = await loadTask(tx, taskId);
     if (!task) {
@@ -429,6 +447,12 @@ export async function moveTask(
 
     return { task: await loadTaskDetail(taskId, tx), fromColumnId };
   });
+
+  emitToProject(context.projectId, "task:moved", {
+    task: toTaskCardFromDetail(result.task),
+    fromColumnId: result.fromColumnId,
+  });
+  return result;
 }
 
 export async function deleteTask(
@@ -444,9 +468,14 @@ export async function deleteTask(
   }
 
   await db.delete(tasks).where(eq(tasks.id, taskId));
-  return {
+  const result = {
     taskId,
     columnId: context.task.columnId,
     projectId: context.projectId,
   };
+  emitToProject(result.projectId, "task:deleted", {
+    taskId: result.taskId,
+    columnId: result.columnId,
+  });
+  return result;
 }

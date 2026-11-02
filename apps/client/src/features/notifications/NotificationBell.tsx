@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from "../../components/ui/popover";
 import { Skeleton } from "../../components/ui/skeleton";
+import { useSocket } from "../realtime/useSocket";
 import NotificationItem from "./NotificationItem";
 import {
   useMarkAllNotificationsRead,
@@ -20,7 +21,8 @@ import {
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const unreadQuery = useUnreadNotificationCount();
+  const { isConnected } = useSocket();
+  const unreadQuery = useUnreadNotificationCount(isConnected);
   const listQuery = useNotificationList(open);
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();

@@ -53,6 +53,10 @@ vi.mock("../../features/auth/useAuth", () => ({
   useAuth: useAuthMock,
 }));
 
+vi.mock("../realtime/useProjectRoom", () => ({
+  useProjectRoom: () => ({ onlineUserIds: [] }),
+}));
+
 const maya = {
   id: "u-maya",
   email: "maya@teamboard.dev",

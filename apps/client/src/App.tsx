@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShellLayout } from "./components/layout/AppShell";
 import BoardPage from "./features/board/BoardPage";
+import { SocketProvider } from "./features/realtime/SocketProvider";
 import LoginPage from "./pages/LoginPage";
 import ProjectSettingsPage from "./pages/ProjectSettingsPage";
 import ProjectsPage from "./pages/ProjectsPage";
@@ -13,7 +14,13 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route element={<ProtectedRoute />}>
-        <Route element={<AppShellLayout />}>
+        <Route
+          element={
+            <SocketProvider>
+              <AppShellLayout />
+            </SocketProvider>
+          }
+        >
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<BoardPage />} />
           <Route
