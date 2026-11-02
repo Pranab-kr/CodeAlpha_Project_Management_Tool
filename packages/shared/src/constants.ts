@@ -7,6 +7,8 @@ export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 export const NOTIFICATION_TYPES = ["task_assigned", "comment_added"] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
+export const DEFAULT_COLUMNS = ["Backlog", "In Progress", "Done"] as const;
+
 export const PROJECT_NAME_MAX = 120;
 export const TASK_TITLE_MAX = 200;
 export const COMMENT_BODY_MAX = 5000;
