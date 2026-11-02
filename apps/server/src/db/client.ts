@@ -15,3 +15,7 @@ pool.on("error", (error: Error & { code?: string }) => {
 export const db = drizzle({ client: pool, casing: "snake_case" });
 
 export type Db = typeof db;
+/** Drizzle transaction handle (the callback argument of `db.transaction`). */
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+/** Any executor: the pool-backed database or an open transaction. */
+export type DbExecutor = Db | Tx;
