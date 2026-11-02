@@ -49,3 +49,34 @@ export function formatRelativeTime(
   }
   return formatter.format(0, "second");
 }
+
+/**
+ * Parse a date-only `YYYY-MM-DD` string as a local calendar date.
+ * `new Date("YYYY-MM-DD")` would parse it as UTC midnight and can shift the day.
+ */
+export function parseLocalDate(value: string): Date {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function formatDueDate(value: string): string {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(parseLocalDate(value));
+}
+
+/** Compares local calendar days, so a due date is overdue the day after it. */
+export function isOverdue(
+  value: string | null,
+  today: Date = new Date(),
+): boolean {
+  if (!value) return false;
+  const due = parseLocalDate(value);
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  return due.getTime() < startOfToday.getTime();
+}
