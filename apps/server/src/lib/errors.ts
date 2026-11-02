@@ -49,6 +49,15 @@ export class AppError extends Error {
     return new AppError(422, "VALIDATION_ERROR", message, details);
   }
 
+  /** A well-formed request that violates a domain rule (e.g. a foreign column). */
+  static unprocessable(
+    code: string,
+    message: string,
+    details?: unknown,
+  ): AppError {
+    return new AppError(422, code, message, details);
+  }
+
   static serviceUnavailable(code: string, message: string): AppError {
     return new AppError(503, code, message);
   }

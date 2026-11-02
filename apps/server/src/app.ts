@@ -10,6 +10,7 @@ import { errorHandler } from "./middleware/error.js";
 import { originGuard } from "./middleware/origin-guard.js";
 import { createRateLimiter } from "./middleware/rate-limit.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { columnsRouter } from "./modules/columns/columns.routes.js";
 import { projectsRouter } from "./modules/projects/projects.routes.js";
 import { usersRouter } from "./modules/users/users.routes.js";
 import { createHealthRouter, type HealthCheck } from "./routes/health.js";
@@ -58,6 +59,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/users", usersRouter);
   app.use("/api/v1/projects", projectsRouter);
+  app.use("/api/v1", columnsRouter);
 
   app.use((_req, _res, next) => {
     next(AppError.notFound());
