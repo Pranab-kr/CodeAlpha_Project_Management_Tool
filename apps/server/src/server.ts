@@ -5,7 +5,7 @@ import { logger } from "./lib/logger.js";
 
 const app = createApp();
 const server = app.listen(env.PORT, () => {
-  logger.info(`CodeAlpha API listening on http://localhost:${env.PORT}`);
+  logger.info(`TeamBoard API listening on http://localhost:${env.PORT}`);
 });
 
 async function shutdown(signal: string): Promise<void> {

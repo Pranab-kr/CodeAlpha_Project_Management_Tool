@@ -1,4 +1,4 @@
-import { loginSchema, registerSchema } from "@codealpha/shared";
+import { loginSchema, registerSchema } from "@teamboard/shared";
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.js";
 import { validateBody } from "../../middleware/validate.js";

@@ -1,4 +1,4 @@
-import type { UserDTO } from "@codealpha/shared";
+import type { UserDTO } from "@teamboard/shared";
 
 const API_PREFIX = "/api/v1";
 

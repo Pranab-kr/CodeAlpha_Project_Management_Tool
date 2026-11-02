@@ -3,7 +3,7 @@ import {
   NOTIFICATION_TYPES,
   PROJECT_ROLES,
   TASK_PRIORITIES,
-} from "@codealpha/shared";
+} from "@teamboard/shared";
 
 export const projectRoleEnum = pgEnum("project_role", PROJECT_ROLES);
 export const taskPriorityEnum = pgEnum("task_priority", TASK_PRIORITIES);

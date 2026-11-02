@@ -1,1 +1,1 @@
-CREATE DATABASE codealpha_test;
+CREATE DATABASE teamboard_test;

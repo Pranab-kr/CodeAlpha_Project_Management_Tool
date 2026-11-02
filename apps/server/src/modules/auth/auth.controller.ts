@@ -1,5 +1,5 @@
-import { REFRESH_COOKIE } from "@codealpha/shared";
-import type { LoginInput, RegisterInput } from "@codealpha/shared";
+import { REFRESH_COOKIE } from "@teamboard/shared";
+import type { LoginInput, RegisterInput } from "@teamboard/shared";
 import type { RequestHandler } from "express";
 import {
   clearAuthCookies,

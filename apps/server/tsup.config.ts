@@ -7,5 +7,5 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   outDir: "dist",
-  noExternal: ["@codealpha/shared"],
+  noExternal: ["@teamboard/shared"],
 });

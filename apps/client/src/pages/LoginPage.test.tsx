@@ -45,7 +45,7 @@ describe("LoginPage", () => {
     const user = userEvent.setup();
     renderLogin();
 
-    await user.type(screen.getByLabelText(/email/i), "maya@codealpha.dev");
+    await user.type(screen.getByLabelText(/email/i), "maya@teamboard.dev");
     await user.type(screen.getByLabelText(/password/i), "WrongPassword!");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
@@ -61,7 +61,7 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: /use demo account/i }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/email/i)).toHaveValue("maya@codealpha.dev");
+      expect(screen.getByLabelText(/email/i)).toHaveValue("maya@teamboard.dev");
     });
     expect(screen.getByLabelText(/password/i)).toHaveValue("Password123!");
   });

@@ -1,5 +1,5 @@
 import { pathToFileURL } from "node:url";
-import type { TaskPriority } from "@codealpha/shared";
+import type { TaskPriority } from "@teamboard/shared";
 import bcrypt from "bcryptjs";
 import { and, eq } from "drizzle-orm";
 import { db, pool, type Db } from "./client.js";
@@ -60,9 +60,9 @@ interface DemoProject {
 }
 
 const DEMO_USERS: DemoUser[] = [
-  { email: "maya@codealpha.dev", name: "Maya Chen" },
-  { email: "dev@codealpha.dev", name: "Dev Patel" },
-  { email: "sam@codealpha.dev", name: "Sam Rivera" },
+  { email: "maya@teamboard.dev", name: "Maya Chen" },
+  { email: "dev@teamboard.dev", name: "Dev Patel" },
+  { email: "sam@teamboard.dev", name: "Sam Rivera" },
 ];
 
 const COLUMN_NAMES = ["Backlog", "In Progress", "Done"] as const;
@@ -72,10 +72,10 @@ const DEMO_PROJECTS: DemoProject[] = [
     name: "Website Redesign",
     description:
       "Refresh the marketing site end to end: new information architecture, a shared design system, and a faster landing page.",
-    ownerEmail: "maya@codealpha.dev",
+    ownerEmail: "maya@teamboard.dev",
     members: [
-      { email: "sam@codealpha.dev", role: "admin" },
-      { email: "dev@codealpha.dev", role: "member" },
+      { email: "sam@teamboard.dev", role: "admin" },
+      { email: "dev@teamboard.dev", role: "member" },
     ],
     tasks: [
       {
@@ -84,7 +84,7 @@ const DEMO_PROJECTS: DemoProject[] = [
         description:
           "Map every existing page and flag the ones that no longer earn their place.",
         priority: "high",
-        assigneeEmail: "dev@codealpha.dev",
+        assigneeEmail: "dev@teamboard.dev",
         dueInDays: 7,
       },
       {
@@ -107,7 +107,7 @@ const DEMO_PROJECTS: DemoProject[] = [
         description:
           "Colors, spacing, and type scale as CSS variables so the app and site share one source of truth.",
         priority: "high",
-        assigneeEmail: "dev@codealpha.dev",
+        assigneeEmail: "dev@teamboard.dev",
         dueInDays: 3,
       },
       {
@@ -115,50 +115,50 @@ const DEMO_PROJECTS: DemoProject[] = [
         title: "Refactor the hero section",
         description: "Smaller bundle, same layout, sharper headline.",
         priority: "medium",
-        assigneeEmail: "sam@codealpha.dev",
+        assigneeEmail: "sam@teamboard.dev",
       },
       {
         column: "Done",
         title: "Set up the analytics baseline",
         description: "Page views and signup funnel, nothing personal.",
         priority: "medium",
-        assigneeEmail: "maya@codealpha.dev",
+        assigneeEmail: "maya@teamboard.dev",
       },
     ],
     comments: [
       {
         taskTitle: "Build the new design tokens",
-        authorEmail: "maya@codealpha.dev",
+        authorEmail: "maya@teamboard.dev",
         body: "Keep indigo as the primary — it tested well with the team.",
       },
       {
         taskTitle: "Build the new design tokens",
-        authorEmail: "dev@codealpha.dev",
+        authorEmail: "dev@teamboard.dev",
         body: "Agreed. I'll land the tokens today.",
       },
       {
         taskTitle: "Refactor the hero section",
-        authorEmail: "sam@codealpha.dev",
+        authorEmail: "sam@teamboard.dev",
         body: "The new hero is about 40% lighter. Review when you can.",
       },
     ],
     notifications: [
       {
-        recipientEmail: "dev@codealpha.dev",
-        actorEmail: "maya@codealpha.dev",
+        recipientEmail: "dev@teamboard.dev",
+        actorEmail: "maya@teamboard.dev",
         type: "task_assigned",
         taskTitle: "Build the new design tokens",
       },
       {
-        recipientEmail: "dev@codealpha.dev",
-        actorEmail: "maya@codealpha.dev",
+        recipientEmail: "dev@teamboard.dev",
+        actorEmail: "maya@teamboard.dev",
         type: "comment_added",
         taskTitle: "Build the new design tokens",
-        commentAuthorEmail: "maya@codealpha.dev",
+        commentAuthorEmail: "maya@teamboard.dev",
       },
       {
-        recipientEmail: "sam@codealpha.dev",
-        actorEmail: "maya@codealpha.dev",
+        recipientEmail: "sam@teamboard.dev",
+        actorEmail: "maya@teamboard.dev",
         type: "task_assigned",
         taskTitle: "Refactor the hero section",
       },
@@ -168,10 +168,10 @@ const DEMO_PROJECTS: DemoProject[] = [
     name: "Mobile App Launch",
     description:
       "Ship the 1.0 mobile release: onboarding, offline support, and store-ready release notes.",
-    ownerEmail: "maya@codealpha.dev",
+    ownerEmail: "maya@teamboard.dev",
     members: [
-      { email: "dev@codealpha.dev", role: "member" },
-      { email: "sam@codealpha.dev", role: "member" },
+      { email: "dev@teamboard.dev", role: "member" },
+      { email: "sam@teamboard.dev", role: "member" },
     ],
     tasks: [
       {
@@ -186,14 +186,14 @@ const DEMO_PROJECTS: DemoProject[] = [
         title: "Profile screen empty states",
         description: "Empty, loading, and error states for the profile tab.",
         priority: "low",
-        assigneeEmail: "sam@codealpha.dev",
+        assigneeEmail: "sam@teamboard.dev",
       },
       {
         column: "Backlog",
         title: "Fix the cold-start crash",
         description: "Crash on launch when the stored session is expired.",
         priority: "urgent",
-        assigneeEmail: "dev@codealpha.dev",
+        assigneeEmail: "dev@teamboard.dev",
         dueInDays: -2,
       },
       {
@@ -201,7 +201,7 @@ const DEMO_PROJECTS: DemoProject[] = [
         title: "Offline cache for the task list",
         description: "Show the last known board when the network drops.",
         priority: "high",
-        assigneeEmail: "dev@codealpha.dev",
+        assigneeEmail: "dev@teamboard.dev",
         dueInDays: 4,
       },
       {
@@ -209,20 +209,20 @@ const DEMO_PROJECTS: DemoProject[] = [
         title: "Set up crash reporting",
         description: "Symbols uploaded on every release build.",
         priority: "medium",
-        assigneeEmail: "sam@codealpha.dev",
+        assigneeEmail: "sam@teamboard.dev",
       },
     ],
     comments: [
       {
         taskTitle: "Fix the cold-start crash",
-        authorEmail: "sam@codealpha.dev",
+        authorEmail: "sam@teamboard.dev",
         body: "Reproduced on a Pixel 7 — the trace points at session restore.",
       },
     ],
     notifications: [
       {
-        recipientEmail: "dev@codealpha.dev",
-        actorEmail: "maya@codealpha.dev",
+        recipientEmail: "dev@teamboard.dev",
+        actorEmail: "maya@teamboard.dev",
         type: "task_assigned",
         taskTitle: "Fix the cold-start crash",
       },

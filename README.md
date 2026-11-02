@@ -1,4 +1,4 @@
-# CodeAlpha
+# TeamBoard
 
 **Project management, minus the chaos.** A small-team project management app in the spirit of
 Trello and Asana: projects, a Kanban board, task assignment, comments, in-app notifications,
@@ -7,7 +7,7 @@ and live updates over WebSockets.
 > **Build status: Phases 0–1 complete (foundation and authentication).** The monorepo,
 > PostgreSQL schema, seed data, health check, tooling, and the full cookie-auth stack are in
 > place. Projects, boards, comments, notifications, and realtime arrive in later phases. See
-> [docs/superpowers/specs](docs/superpowers/specs/2026-11-01-codealpha-design.md).
+> [docs/superpowers/specs](docs/superpowers/specs/2026-11-01-teamboard-design.md).
 
 ## Features
 
@@ -52,9 +52,9 @@ Seeded by `npm run setup` / `npm run db:seed`. All three use the password `Passw
 
 | Email                | Role in the demo data                                      |
 | -------------------- | ---------------------------------------------------------- |
-| `maya@codealpha.dev` | Owner of _Website Redesign_ and _Mobile App Launch_        |
-| `dev@codealpha.dev`  | Member on both projects, assignee on several tasks         |
-| `sam@codealpha.dev`  | Admin on _Website Redesign_, member on _Mobile App Launch_ |
+| `maya@teamboard.dev` | Owner of _Website Redesign_ and _Mobile App Launch_        |
+| `dev@teamboard.dev`  | Member on both projects, assignee on several tasks         |
+| `sam@teamboard.dev`  | Admin on _Website Redesign_, member on _Mobile App Launch_ |
 
 ## Scripts
 
@@ -62,8 +62,8 @@ Seeded by `npm run setup` / `npm run db:seed`. All three use the password `Passw
 | ---------------------------------- | ----------------------------------------------------- |
 | `npm run setup`                    | Idempotent bootstrap: `.env`, database, migrate, seed |
 | `npm run dev`                      | Server and client together (concurrently)             |
-| `npm run dev -w @codealpha/server` | API only, with `tsx watch`                            |
-| `npm run dev -w @codealpha/client` | Vite client only                                      |
+| `npm run dev -w @teamboard/server` | API only, with `tsx watch`                            |
+| `npm run dev -w @teamboard/client` | Vite client only                                      |
 | `npm run db:up` / `db:down`        | Start/stop PostgreSQL via Docker Compose              |
 | `npm run db:generate`              | Generate a migration from schema changes              |
 | `npm run db:migrate`               | Apply migrations                                      |
@@ -96,7 +96,7 @@ Phase 1 onward.
 
 ## Testing
 
-- API integration tests run against the real `codealpha_test` database, apply migrations in a
+- API integration tests run against the real `teamboard_test` database, apply migrations in a
   global setup, and truncate tables before each test.
 - Unit tests cover pure helpers (tokens, ordering, recipient selection).
 - Set `NODE_ENV=test` and `TEST_DATABASE_URL` yourself when running a suite directly; the Vitest
@@ -104,7 +104,7 @@ Phase 1 onward.
 
 ## Documentation
 
-- [Design document](docs/superpowers/specs/2026-11-01-codealpha-design.md) — the source of truth
+- [Design document](docs/superpowers/specs/2026-11-01-teamboard-design.md) — the source of truth
 - [Phase plans](docs/superpowers/plans/README.md) — eight executable plans
 - [Build journal](docs/progress.md) — status, decisions, evidence, next steps
 - [AGENTS.md](AGENTS.md) — operating rules for agents working in this repo
@@ -113,4 +113,4 @@ Phase 1 onward.
 
 - Single server instance only: realtime uses Socket.IO's in-memory adapter and presence map.
 - No email delivery, file uploads, or password reset in v1.
-- `codealpha` / `codealpha` credentials are for local development only. Never reuse them.
+- `teamboard` / `teamboard` credentials are for local development only. Never reuse them.

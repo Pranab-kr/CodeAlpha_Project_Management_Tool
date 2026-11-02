@@ -39,7 +39,7 @@ describe("ProtectedRoute", () => {
 
   it("renders the protected content for authenticated users", () => {
     useAuthMock.mockReturnValue(
-      authValue({ user: { id: "u1", email: "maya@codealpha.dev" } }),
+      authValue({ user: { id: "u1", email: "maya@teamboard.dev" } }),
     );
     renderRoutes();
     expect(screen.getByText("Projects screen")).toBeInTheDocument();

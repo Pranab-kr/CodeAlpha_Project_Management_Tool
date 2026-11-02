@@ -1,4 +1,4 @@
-import { ACCESS_COOKIE, REFRESH_COOKIE } from "@codealpha/shared";
+import { ACCESS_COOKIE, REFRESH_COOKIE } from "@teamboard/shared";
 import type { CookieOptions, Request, Response } from "express";
 import { env } from "../config/env.js";
 

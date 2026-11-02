@@ -1,4 +1,4 @@
-import type { LoginInput, RegisterInput, UserDTO } from "@codealpha/shared";
+import type { LoginInput, RegisterInput, UserDTO } from "@teamboard/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createContext,

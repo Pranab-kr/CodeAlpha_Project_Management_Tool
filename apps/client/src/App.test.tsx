@@ -21,7 +21,7 @@ describe("App", () => {
       </MemoryRouter>,
     );
     expect(
-      screen.getByRole("heading", { name: "CodeAlpha" }),
+      screen.getByRole("heading", { name: "TeamBoard" }),
     ).toBeInTheDocument();
   });
 });

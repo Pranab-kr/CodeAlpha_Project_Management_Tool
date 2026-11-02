@@ -1,19 +1,19 @@
-# AGENTS.md — CodeAlpha Operating Manual
+# AGENTS.md — TeamBoard Operating Manual
 
-This file is canonical for every agent working on CodeAlpha. Read it before touching code.
+This file is canonical for every agent working on TeamBoard. Read it before touching code.
 
 ## 1. Read order for every session
 
 1. `AGENTS.md` (this file).
-2. `docs/superpowers/specs/2026-11-01-codealpha-design.md` — the product/technical source of truth.
+2. `docs/superpowers/specs/2026-11-01-teamboard-design.md` — the product/technical source of truth.
 3. The current phase plan in `docs/superpowers/plans/2026-11-01-phase-0N-*.md`.
 4. The last two entries of `docs/progress.md`.
 
 Then verify the dependency phase is marked **Done** and the app still runs. Do not start Phase N+1.
 
-## 2. What CodeAlpha is
+## 2. What TeamBoard is
 
-CodeAlpha is an internship-level, small-team project management app (Trello/Asana in spirit): authentication, group projects, one Kanban board per project, task assignment, comments, in-app notifications, and realtime updates over WebSockets.
+TeamBoard is an internship-level, small-team project management app (Trello/Asana in spirit): authentication, group projects, one Kanban board per project, task assignment, comments, in-app notifications, and realtime updates over WebSockets.
 
 It is a **modular monolith**:
 
@@ -35,8 +35,8 @@ If bleeding-edge tooling genuinely breaks the build, the documented fallback is 
 npm install              # install workspaces
 npm run setup            # .env (if missing), Postgres, migrations, seed; idempotent
 npm run dev              # server :4000 + client :5173 (Vite proxies /api and /socket.io)
-npm run dev -w @codealpha/server
-npm run dev -w @codealpha/client
+npm run dev -w @teamboard/server
+npm run dev -w @teamboard/client
 
 npm run db:up            # docker compose up -d db
 npm run db:down
@@ -50,8 +50,8 @@ npm run format            # write
 npm run format:check
 npm run typecheck
 npm test                  # all workspaces
-npm test -w @codealpha/server -- tests/integration/<file>.test.ts
-npm test -w @codealpha/client -- src/<path>.test.tsx
+npm test -w @teamboard/server -- tests/integration/<file>.test.ts
+npm test -w @teamboard/client -- src/<path>.test.tsx
 npm run build
 npm start                 # bundled server + built SPA (production shape)
 npm run test:e2e          # Playwright smoke (build first, test DB, seeded)
@@ -74,7 +74,7 @@ npm run test:e2e          # Phase 7 onward
 AGENTS.md
 README.md
 docs/
-  superpowers/specs/2026-11-01-codealpha-design.md
+  superpowers/specs/2026-11-01-teamboard-design.md
   superpowers/plans/2026-11-01-phase-0N-*.md
   progress.md
   screenshots/
@@ -127,7 +127,7 @@ Contracts live in `packages/shared`; schema lives in `apps/server/src/db/schema`
 
 - TypeScript `strict`; ESM with `.js` import suffixes in server code.
 - No `any` without a written reason in a comment. Prefer `unknown` + narrowing.
-- Zod validates every request body, query, and path param at the boundary; use `@codealpha/shared` schemas.
+- Zod validates every request body, query, and path param at the boundary; use `@teamboard/shared` schemas.
 - Explicit DTO mappers. Never `SELECT *` into a response.
 - Modules follow `routes → controller → service`; controllers never contain SQL; services never touch `req`/`res`.
 - Wrap multi-write operations in `db.transaction`: project creation, member removal, task move/renumber, notification + triggering write.
@@ -153,7 +153,7 @@ Contracts live in `packages/shared`; schema lives in `apps/server/src/db/schema`
 
 ## 8. Testing requirements
 
-- API integration tests are the backbone and run against real PostgreSQL (`codealpha_test`), never the dev DB.
+- API integration tests are the backbone and run against real PostgreSQL (`teamboard_test`), never the dev DB.
 - Unit tests for pure logic: ordering, recipient selection, cursor, token/cookie helpers, role predicates, Zod edge cases.
 - Socket integration tests boot an HTTP server on an ephemeral port, connect with real cookies, and assert auth, room isolation, payloads, presence, and teardown.
 - Client tests use Testing Library + a typed fetch stub; mock sockets with a small EventEmitter, not real timers where avoidable.
@@ -222,8 +222,8 @@ Rules:
 Copy this into a new session, replacing `N`:
 
 ```text
-You are implementing Phase N of CodeAlpha, an internship-level project management app.
-Read, in order: AGENTS.md, docs/superpowers/specs/2026-11-01-codealpha-design.md,
+You are implementing Phase N of TeamBoard, an internship-level project management app.
+Read, in order: AGENTS.md, docs/superpowers/specs/2026-11-01-teamboard-design.md,
 docs/superpowers/plans/2026-11-01-phase-0N-*.md, and the latest entries in docs/progress.md.
 Verify the previous phase is Done and the app/tests run. Implement only Phase N.
 Follow the plan's task order, write the required tests, run every quality gate,

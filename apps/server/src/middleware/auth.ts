@@ -1,4 +1,4 @@
-import { ACCESS_COOKIE } from "@codealpha/shared";
+import { ACCESS_COOKIE } from "@teamboard/shared";
 import type { RequestHandler } from "express";
 import { readCookie } from "../lib/cookies.js";
 import { AppError } from "../lib/errors.js";

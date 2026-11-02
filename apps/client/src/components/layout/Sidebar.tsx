@@ -29,7 +29,7 @@ export default function Sidebar() {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r bg-card p-4 lg:flex">
       <div className="mb-6 px-2">
-        <p className="text-lg font-semibold tracking-tight">CodeAlpha</p>
+        <p className="text-lg font-semibold tracking-tight">TeamBoard</p>
         <p className="text-xs text-muted-foreground">
           Project management, minus the chaos
         </p>
@@ -51,7 +51,7 @@ export function SidebarSheet() {
       </SheetTrigger>
       <SheetContent side="left" className="w-72">
         <SheetHeader>
-          <SheetTitle>CodeAlpha</SheetTitle>
+          <SheetTitle>TeamBoard</SheetTitle>
         </SheetHeader>
         <div className="px-4 pb-4">
           <SidebarNav />

@@ -1,4 +1,4 @@
-import type { LoginInput, RegisterInput, UserDTO } from "@codealpha/shared";
+import type { LoginInput, RegisterInput, UserDTO } from "@teamboard/shared";
 import { and, eq, isNull } from "drizzle-orm";
 import { env } from "../../config/env.js";
 import { db, type Db } from "../../db/client.js";
@@ -18,7 +18,7 @@ export interface AuthResult {
   refreshToken: string;
 }
 
-const DUMMY_PASSWORD = "codealpha-dummy-password";
+const DUMMY_PASSWORD = "teamboard-dummy-password";
 let dummyHashPromise: Promise<string> | undefined;
 
 function getDummyHash(): Promise<string> {

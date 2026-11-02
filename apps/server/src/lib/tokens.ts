@@ -2,8 +2,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { jwtVerify, SignJWT } from "jose";
 import { env } from "../config/env.js";
 
-const ISSUER = "codealpha";
-const AUDIENCE = "codealpha-web";
+const ISSUER = "teamboard";
+const AUDIENCE = "teamboard-web";
 const ALGORITHM = "HS256";
 
 const secret = new TextEncoder().encode(env.JWT_SECRET);

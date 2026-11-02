@@ -15,7 +15,7 @@ vi.mock("../../features/auth/useAuth", () => ({
 
 const maya = {
   id: "u1",
-  email: "maya@codealpha.dev",
+  email: "maya@teamboard.dev",
   name: "Maya Chen",
   initials: "MC",
   createdAt: "2026-11-01T00:00:00.000Z",
@@ -41,7 +41,7 @@ describe("AppShell", () => {
         </AppShell>
       </MemoryRouter>,
     );
-    expect(screen.getByText("CodeAlpha")).toBeInTheDocument();
+    expect(screen.getByText("TeamBoard")).toBeInTheDocument();
     expect(screen.getByText("MC")).toBeInTheDocument();
     expect(screen.getByText("Board content")).toBeInTheDocument();
   });
@@ -57,7 +57,7 @@ describe("AppShell", () => {
     );
 
     await user.click(screen.getByRole("button", { name: /open user menu/i }));
-    expect(await screen.findByText("maya@codealpha.dev")).toBeInTheDocument();
+    expect(await screen.findByText("maya@teamboard.dev")).toBeInTheDocument();
 
     await user.click(screen.getByRole("menuitem", { name: /log out/i }));
     expect(logoutMock).toHaveBeenCalledTimes(1);

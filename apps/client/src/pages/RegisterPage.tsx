@@ -1,4 +1,4 @@
-import { registerSchema, type RegisterInput } from "@codealpha/shared";
+import { registerSchema, type RegisterInput } from "@teamboard/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -40,7 +40,7 @@ export default function RegisterPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
       <section className="w-full max-w-sm rounded-xl border bg-card p-8 shadow-sm">
-        <h1 className="text-3xl font-semibold tracking-tight">CodeAlpha</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">TeamBoard</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Create an account and start your first project.
         </p>

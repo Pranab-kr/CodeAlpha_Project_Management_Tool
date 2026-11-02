@@ -1,4 +1,4 @@
-import type { UserDTO } from "@codealpha/shared";
+import type { UserDTO } from "@teamboard/shared";
 import type { SelectUser } from "../../db/schema/index.js";
 
 function initialsFor(name: string, email: string): string {

@@ -21,7 +21,7 @@ describe("seed", () => {
     const [maya] = await db
       .select()
       .from(users)
-      .where(eq(users.email, "maya@codealpha.dev"));
+      .where(eq(users.email, "maya@teamboard.dev"));
     expect(maya).toBeDefined();
     await expect(
       bcrypt.compare("Password123!", maya!.passwordHash),

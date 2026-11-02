@@ -1,5 +1,5 @@
 {
-  "name": "codealpha",
+  "name": "teamboard",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,14 +17,14 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
-    "dev": "concurrently -n server,client -c blue,magenta \"npm run dev -w @codealpha/server\" \"npm run dev -w @codealpha/client\"",
+    "dev": "concurrently -n server,client -c blue,magenta \"npm run dev -w @teamboard/server\" \"npm run dev -w @teamboard/client\"",
     "setup": "node scripts/setup.mjs",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
-    "db:generate": "npm run db:generate -w @codealpha/server",
-    "db:migrate": "npm run db:migrate -w @codealpha/server",
-    "db:seed": "npm run db:seed -w @codealpha/server",
-    "db:reset": "npm run db:reset -w @codealpha/server"
+    "db:generate": "npm run db:generate -w @teamboard/server",
+    "db:migrate": "npm run db:migrate -w @teamboard/server",
+    "db:seed": "npm run db:seed -w @teamboard/server",
+    "db:reset": "npm run db:reset -w @teamboard/server"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

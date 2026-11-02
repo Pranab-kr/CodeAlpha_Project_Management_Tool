@@ -1,5 +1,5 @@
 {
-  "name": "@codealpha/server",
+  "name": "@teamboard/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "db:reset": "tsx src/db/reset.ts"
   },
   "dependencies": {
-    "@codealpha/shared": "*",
+    "@teamboard/shared": "*",
     "bcryptjs": "3.0.3",
     "cookie-parser": "1.4.7",
     "dotenv": "18.0.9",

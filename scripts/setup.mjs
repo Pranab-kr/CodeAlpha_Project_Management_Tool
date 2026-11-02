@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Idempotent local bootstrap for CodeAlpha.
+ * Idempotent local bootstrap for TeamBoard.
  *
  * 1. Create `.env` from `.env.example` with a random `JWT_SECRET` when missing.
  * 2. Start PostgreSQL through Docker Compose and wait for it to accept connections.
@@ -21,9 +21,9 @@ const envPath = resolve(repoRoot, ".env");
 const envExamplePath = resolve(repoRoot, ".env.example");
 
 const DEMO_ACCOUNTS = [
-  "maya@codealpha.dev",
-  "dev@codealpha.dev",
-  "sam@codealpha.dev",
+  "maya@teamboard.dev",
+  "dev@teamboard.dev",
+  "sam@teamboard.dev",
 ];
 const DEMO_PASSWORD = "Password123!";
 
@@ -73,9 +73,9 @@ function startDatabase() {
         "db",
         "pg_isready",
         "-U",
-        "codealpha",
+        "teamboard",
         "-d",
-        "codealpha",
+        "teamboard",
       ]);
       console.log("[setup] PostgreSQL is ready.");
       return;
@@ -94,14 +94,14 @@ function ensureTestDatabase() {
     "db",
     "psql",
     "-U",
-    "codealpha",
+    "teamboard",
     "-d",
     "postgres",
     "-tAc",
-    "SELECT 1 FROM pg_database WHERE datname = 'codealpha_test'",
+    "SELECT 1 FROM pg_database WHERE datname = 'teamboard_test'",
   ]);
   if (exists === "1") {
-    console.log("[setup] Test database codealpha_test already exists.");
+    console.log("[setup] Test database teamboard_test already exists.");
     return;
   }
   run("docker", [
@@ -111,10 +111,10 @@ function ensureTestDatabase() {
     "db",
     "createdb",
     "-U",
-    "codealpha",
-    "codealpha_test",
+    "teamboard",
+    "teamboard_test",
   ]);
-  console.log("[setup] Created test database codealpha_test.");
+  console.log("[setup] Created test database teamboard_test.");
 }
 
 function migrateAndSeed() {
@@ -130,7 +130,7 @@ function main() {
   ensureTestDatabase();
   migrateAndSeed();
 
-  console.log("\nCodeAlpha is ready.");
+  console.log("\nTeamBoard is ready.");
   console.log("Demo accounts:");
   for (const email of DEMO_ACCOUNTS) {
     console.log(`  ${email} / ${DEMO_PASSWORD}`);
