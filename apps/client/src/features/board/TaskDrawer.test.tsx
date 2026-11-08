@@ -162,6 +162,24 @@ describe("TaskDrawer", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
+  it("collects a due date from the calendar picker", async () => {
+    const user = userEvent.setup();
+    renderDrawer({ taskId: null });
+    const now = new Date();
+    const expected = `${now.getFullYear()}-${String(
+      now.getMonth() + 1,
+    ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    await user.type(screen.getByLabelText("Title"), "Dated task");
+    await user.click(screen.getByLabelText("Due date"));
+    await user.click(screen.getByRole("button", { name: "Today" }));
+    await user.click(screen.getByRole("button", { name: "Create task" }));
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({ dueDate: expected }),
+    );
+  });
+
   it("prefills an existing task and saves trimmed values", async () => {
     taskState.current = task;
     const user = userEvent.setup();

@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "../../components/ui/alert-dialog";
 import { Button } from "../../components/ui/button";
+import DatePicker from "../../components/ui/date-picker";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import {
@@ -271,16 +272,11 @@ export default function TaskDrawer({
 
               <div className="space-y-2">
                 <Label htmlFor="task-due-date">Due date</Label>
-                <Input
+                <DatePicker
                   id="task-due-date"
-                  type="date"
-                  value={dueDate ?? ""}
-                  onChange={(event) =>
-                    form.setValue(
-                      "dueDate",
-                      event.target.value === "" ? null : event.target.value,
-                      { shouldValidate: true },
-                    )
+                  value={dueDate ?? null}
+                  onChange={(value) =>
+                    form.setValue("dueDate", value, { shouldValidate: true })
                   }
                 />
               </div>

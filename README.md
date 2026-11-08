@@ -232,6 +232,31 @@ Deploy steps: build once (`npm run build`), run `npm run db:migrate`, then `npm 
 TLS at your proxy; Express trusts one proxy hop in production (`trust proxy 1`) so secure cookies
 and client IPs are correct. Socket.IO shares the same origin and path (`/socket.io`).
 
+### Railway
+
+The repo ships a `Dockerfile` (Node 24) and `railway.json`: migrations run as a pre-deploy command,
+the health check is `/api/health`, and the service is pinned to one replica.
+
+1. Create a Railway project from this GitHub repository; Railway builds the `Dockerfile`.
+2. Set the service variables:
+
+   ```bash
+   DATABASE_URL=<neon connection string>
+   JWT_SECRET=<32+ random characters>
+   APP_ORIGIN=https://<service>.up.railway.app
+   COOKIE_SECURE=true
+   SERVE_CLIENT=true
+   NODE_ENV=production
+   ```
+
+   Do not set `PORT`; Railway injects it.
+
+3. Deploy. `npm run db:migrate` runs before the new container receives traffic, then the health
+   check gates the release.
+4. Keep `numReplicas` at 1. Realtime rooms and presence are process-local.
+
+Production does not seed demo accounts; register through the UI.
+
 **Single-instance limitation:** realtime rooms and presence live in process memory. Running more
 than one instance requires the Socket.IO Redis adapter and a shared presence store, which v1
 intentionally does not include.

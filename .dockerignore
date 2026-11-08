@@ -1,0 +1,17 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+.env
+.env.*
+docs
+e2e
+playwright-report
+test-results
+.commandcode
+.superpowers
+*.log
